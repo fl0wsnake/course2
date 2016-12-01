@@ -19,13 +19,6 @@ class Subcategory(models.Model):
         return self.name.title()
 
 
-class Manufacturer(models.Model):
-    name = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.name
-
-
 class Image(models.Model):
     img = models.ImageField(upload_to='images/', width_field="width",
                             height_field="height")
@@ -38,7 +31,6 @@ class Image(models.Model):
 
 class Product(models.Model):
     subcategory = models.ForeignKey(Subcategory, on_delete=models.SET_DEFAULT, null=True, default=None)
-    manufacturer = models.ForeignKey(Manufacturer, on_delete=models.SET_DEFAULT, null=True, default=None)
     title_image = models.ForeignKey(Image, null=True, default=None, on_delete=models.SET_DEFAULT)
     images = models.ManyToManyField(Image, related_name="products", blank=True)
     price = models.FloatField(default=0)
