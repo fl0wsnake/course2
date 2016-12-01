@@ -1,5 +1,27 @@
 {% extends "base_template.html" %}
-{% block title %}product.name{% endblock %}
+{% block title %}{{ product.name }}{% endblock %}
 {% block content %}
+    <div class="content-header page-header"><h1>Top sales</h1></div>
+    <div class="product_info_bar frame">
+        <div class="img-container frame">
+            <img src="{{ MEDIA_URL }}{{ product.title_image.img }}" alt="there should have been an image...">
+        </div>
+        <div class="purchase-product-bar">
+            <span>{{ product.price }} USD</span>
+            <a href="{% url 'purchase_product' product.id %}">Purchase</a>
+        </div>
+    </div>
+    <div class="product-info-bar frame">
+        {% for attr in attributes %}
+            <div class="attr-val">
+                {{ attr.name }}: {{ attr.val }}
+            </div>
+        {% endfor %}
+    </div>
+    <div class="product-info-bar">
+        {% for image in images %}
+            <img class="frame" src="{{ MEDIA_URL }}{{ image.img }}" alt="there should have been an image...">
+        {% endfor %}
+    </div>
 
 {% endblock %}

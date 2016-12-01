@@ -1,12 +1,12 @@
 {% extends "base_template.html" %}
 {% block content %}
-    <div class="content-header page-header"><h1>Top</h1></div>
+    <div class="content-header page-header"><h1>Top sales</h1></div>
     <div class="cont">
         {% for product in top_products %}
-            <div class="product">
+            <div class="product frame">
                 <a href="{% url 'product_info' product.id %}">
                     <div class="img-container">
-                        <img src="{{ MEDIA_URL }}{{ product.title_image.url }}"
+                        <img src="{{ MEDIA_URL }}{{ product.title_image.img }}"
                              alt="there should have been an image...">
                     </div>
                     <div class="product-name">{{ product.name }}</div>

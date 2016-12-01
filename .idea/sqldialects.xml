@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="SqlDialectMappings">
-    <file url="dbSrc:///176b5d4a/15859b9b-fdab-4805-89ab-c142da8a2434" dialect="MySQL" />
-    <file url="dbSrc:///176b5d4a/228a8a22-a443-4e34-85b8-2381c49e52ce" dialect="MySQL" />
-    <file url="dbSrc:///176b5d4a/2e8d4e10-1442-494a-87dc-ae529cb469c8" dialect="MySQL" />
-    <file url="dbSrc:///176b5d4a/47d2c714-a8b1-4972-a5d5-afbfaf1740d9" dialect="MySQL" />
+    <file url="PROJECT" dialect="MySQL" />
   </component>
 </project>

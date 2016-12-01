@@ -11,28 +11,36 @@
     <link rel="stylesheet" href="{% static "base_css.css" %}">
 </head>
 <body>
-<div class="navbar navbar-default">
-    <div class="collapse navbar-collapse">
+<nav class="navbar navbar-inverse .navbar-fixed-top">
+    <div class="container-fluid">
+        {#    <div class="navbar-header">#}
+        <a class="navbar-brand" href="{% url 'index' %}">haven't actually come up with a name yet</a>
+        {#    </div>#}
+        <form class="navbar-form navbar-left" method="get" action="#">
+            <input class="form-control" type="text" name="query" placeholder="Search">
+            <input class="btn btn-default" type="submit" value="Go">
+        </form>
         <ul class="nav navbar-nav navbar-right">
             <li><a href="#">Link</a></li>
             <li><a href="#">Link</a></li>
         </ul>
     </div>
-</div>
+</nav>
 <div class="aside">
     <div class="btn-group">
         <button class="btn btn-default btn-lg dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true"
                 aria-expanded="false">
             Catalogue <span class="caret"></span>
         </button>
-        {% for cat in all_categories %}
-            <ul class="dropdown-menu">
+        <ul class="dropdown-menu">
+            {% for cat in all_categories %}
                 <li class="dropdown-header">{{ cat }}</li>
                 {% for subcat in cat.get_subcategories %}
                     <li><a href="#">{{ subcat }}</a></li>
                 {% endfor %}
-            </ul>
-        {% endfor %}
+                <li role="separator" class="divider"></li>
+            {% endfor %}
+        </ul>
     </div>
 </div>
 <div class="content">
