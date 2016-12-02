@@ -37,7 +37,7 @@
             {% for cat in all_categories %}
                 <li class="dropdown-header">{{ cat }}</li>
                 {% for subcat in cat.get_subcategories %}
-                    <li><a href="#">{{ subcat }}</a></li>
+                    <li><a href="{% url 'subcategory_products' subcat.id %}">{{ subcat }}</a></li>
                 {% endfor %}
                 <li role="separator" class="divider"></li>
             {% endfor %}

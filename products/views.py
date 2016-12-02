@@ -16,12 +16,45 @@ def subcategory_products(request, subcategory_id):
     subcategory = get_object_or_404(Subcategory, id=subcategory_id)
     all_categories = Category.objects.all()
 
-    
+    query = '''SELECT p.id, p.name, p.price, p.rating
+    FROM products_product p
+    JOIN products_subcategory sc ON p.subcategory_id = sc.id
+    LEFT JOIN attributes_optionvalue ov ON p.id = ov.product_id
+    LEFT JOIN attributes_intvalue iv ON p.id = iv.product_id
+    LEFT JOIN attributes_floatvalue fv ON p.id = fv.product_id
+    LEFT JOIN attributes_varcharvalue vcv ON p.id = vcv.product_id
+    WHERE (sc.id = %(cat)s) AND'''
+
+    raw_data = {'cat': subcategory_id}
+    d = {}
+    for attr in request.GET:
+        if attr not in d:
+            d[attr] = [request.GET[attr]]
+        else:
+            d[attr].append[request.GET[attr]]
+
+    for attr in request.GET:
+        attr_type = Attribute.objects.get(id=attr).type
+        if attr_type.type == "num":
+            gap = request.GET[attr].split('-')
+            raw_data[attr + '0'] = gap[0]
+            raw_data[attr + '1'] = gap[1]
+            query += ' (attributes_' + attr_type + '.value BETWEEN %(' + attr + '0)s AND %(' + attr + '1)s) AND'
+        else:
+            raw_data[attr + '2'] = request.GET[attr]
+            query += ' (ov.option_id = %(' + attr + '2)s) AND'
+
+    if query[-4:] == ' AND':
+        query = query[:-4]
+
+    products = Product.objects.raw(query, raw_data)
 
     return render(request, 'index/index.html', {'all_categories': all_categories,
                                                 'subcategory': subcategory,
-                                                'products': subcategory.product_set.all()})
+                                                'products': products})
 
+
+# SELECT product.name FROM products JOIN _value JOIN attribute WHERE attribute = {attr} AND _value={val}
 
 def product_info(request, product_id):
     product = get_object_or_404(Product, id=product_id)

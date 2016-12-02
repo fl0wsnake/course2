@@ -1,6 +1,7 @@
 from django.contrib import admin
 from attributes.models import *
 
+admin.site.register(AttributeType)
 admin.site.register(AttributeSuffix)
 admin.site.register(Attribute)
 admin.site.register(Suffix)

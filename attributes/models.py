@@ -2,8 +2,12 @@ from django.db import models
 from products.models import Product
 
 
-# class AttributeType(models.Model):
-#     name = models.CharField(max_length=50)
+class AttributeType(models.Model):
+    name = models.CharField(max_length=20)
+    type = models.CharField(max_length=10)
+
+    def __str__(self):
+        return self.name
 
 
 class Suffix(models.Model):
@@ -14,7 +18,7 @@ class Suffix(models.Model):
 
 
 class Attribute(models.Model):
-    # type = models.ForeignKey(AttributeType, on_delete=models.PROTECT)
+    type = models.ForeignKey(AttributeType, on_delete=models.PROTECT)
     name = models.CharField(max_length=50)
 
     # suffix = models.ManyToManyField(Suffix, related_name="attribute")
@@ -47,7 +51,10 @@ class OptionValue(models.Model):
     option = models.ForeignKey(Option, on_delete=models.PROTECT)
 
     def __str__(self):
-        return "[" + str(self.product) + "]'s [" + str(self.attribute) + "] = " + str(self.option)
+        return "[" + str(self.product) + "]'s [" + str(self.option.attribute.name) + "] = " + str(self.option.name)
+
+    def get_val_tbl(self):
+        return self.option
 
 
 class IntValue(models.Model):
@@ -62,6 +69,9 @@ class IntValue(models.Model):
         return "[" + str(self.product) + "]'s [" + str(self.attribute) + "] = " + str(self.value) + str(
             self.attribute.attributesuffix.suffix)
 
+    def get_val_tbl(self):
+        return self
+
 
 class FloatValue(models.Model):
     class Meta:
@@ -75,6 +85,9 @@ class FloatValue(models.Model):
         return "[" + str(self.product) + "]'s [" + str(self.attribute) + "] = " + str(self.value) + str(
             self.attribute.attributesuffix.suffix)
 
+    def get_val_tbl(self):
+        return self
+
 
 class VarcharValue(models.Model):
     class Meta:
@@ -86,3 +99,6 @@ class VarcharValue(models.Model):
 
     def __str__(self):
         return "[" + str(self.product) + "]'s [" + str(self.attribute) + "] = " + str(self.value)
+
+    def get_val_tbl(self):
+        return self
