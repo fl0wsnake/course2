@@ -126,3 +126,12 @@ img {
     height: 500px;
     margin: 0 8px 8px 0;
 }
+
+.attr-val {
+    width: 100%;
+}
+
+.aside-content {
+    width: 100%;
+    padding-right: 4px;
+}

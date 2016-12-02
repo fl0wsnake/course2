@@ -26,6 +26,8 @@ class Attribute(models.Model):
     def __str__(self):
         return self.name
 
+    # def get_options
+
 
 class AttributeSuffix(models.Model):
     attribute = models.OneToOneField(Attribute, on_delete=models.CASCADE, primary_key=True)

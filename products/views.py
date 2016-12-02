@@ -1,9 +1,37 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import *
 from attributes.models import *
+from itertools import groupby
 
 
 # from django.views.decorators.http import require_http_methods
+
+def get_filtered_products(query, filters, raw_data):
+    # WHERE str
+    count = 0
+    for attr in filters:
+        attr_type = Attribute.objects.get(id=attr).type
+        if attr_type.type == "num":
+            gap = attr[0].split('-')
+            raw_data[str(count)] = gap[0]
+            count += 1
+            raw_data[str(count)] = gap[1]
+            count += 1
+            query += ' (attributes_' + attr_type + '.value BETWEEN %(' + str(count - 2)
+            ')s AND %(' + str(count - 1)
+            ')s) AND'
+        else:
+            query += ' ('
+            for val in filters.getlist(attr):
+                raw_data[str(count)] = val
+                query += '(ov.option_id = %(' + str(count) + ')s) OR '
+                count += 1
+            query = query[:-4] + ')'
+
+    if query[-4:] == ' AND':
+        query = query[:-4]
+
+    return Product.objects.raw(query, raw_data)
 
 
 def index(request):
@@ -13,10 +41,12 @@ def index(request):
 
 
 def subcategory_products(request, subcategory_id):
+    from django.db.models import Count
+
     subcategory = get_object_or_404(Subcategory, id=subcategory_id)
     all_categories = Category.objects.all()
 
-    query = '''SELECT p.id, p.name, p.price, p.rating
+    query = '''SELECT DISTINCT p.id, p.name, p.price, p.rating
     FROM products_product p
     JOIN products_subcategory sc ON p.subcategory_id = sc.id
     LEFT JOIN attributes_optionvalue ov ON p.id = ov.product_id
@@ -25,36 +55,32 @@ def subcategory_products(request, subcategory_id):
     LEFT JOIN attributes_varcharvalue vcv ON p.id = vcv.product_id
     WHERE (sc.id = %(cat)s) AND'''
 
-    raw_data = {'cat': subcategory_id}
-    d = {}
-    for attr in request.GET:
-        if attr not in d:
-            d[attr] = [request.GET[attr]]
-        else:
-            d[attr].append[request.GET[attr]]
+    products = get_filtered_products(query, request.GET, {'cat': subcategory_id})
 
-    for attr in request.GET:
-        attr_type = Attribute.objects.get(id=attr).type
-        if attr_type.type == "num":
-            gap = request.GET[attr].split('-')
-            raw_data[attr + '0'] = gap[0]
-            raw_data[attr + '1'] = gap[1]
-            query += ' (attributes_' + attr_type + '.value BETWEEN %(' + attr + '0)s AND %(' + attr + '1)s) AND'
-        else:
-            raw_data[attr + '2'] = request.GET[attr]
-            query += ' (ov.option_id = %(' + attr + '2)s) AND'
+    filters_query = Attribute.objects.raw('''
+    SELECT DISTINCT a.id, a.name AS attr, o.name AS opt, COUNT(ov.product_id) AS prod_num
+    FROM products_product p
+    JOIN attributes_optionvalue ov ON p.id = ov.product_id
+    JOIN attributes_option o ON ov.option_id = o.id
+    JOIN attributes_attribute a ON o.attribute_id = a.id
+    WHERE p.subcategory_id = %(cat)s
+    GROUP BY a.id, attr, opt
+    HAVING prod_num > 0
+    ''', {'cat': subcategory_id})
 
-    if query[-4:] == ' AND':
-        query = query[:-4]
+    from collections import defaultdict
+    groups = defaultdict(list)
+    for obj in filters_query:
+        groups[obj.id].append(obj)
 
-    products = Product.objects.raw(query, raw_data)
+    filters = groups.values()
 
-    return render(request, 'index/index.html', {'all_categories': all_categories,
-                                                'subcategory': subcategory,
-                                                'products': products})
+    return render(request, 'subcategory_products/subcategory_products.html', {'all_categories': all_categories,
+                                                                              'subcategory': subcategory,
+                                                                              'products': products,
+                                                                              'filters': filters
+                                                                              })
 
-
-# SELECT product.name FROM products JOIN _value JOIN attribute WHERE attribute = {attr} AND _value={val}
 
 def product_info(request, product_id):
     product = get_object_or_404(Product, id=product_id)

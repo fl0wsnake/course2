@@ -1,6 +1,6 @@
 {% extends "base_template.html" %}
 {% block content %}
-    <div class="content-header page-header"><h1>Top sales</h1></div>
+    <div class="content-header page-header"><h1>{{ subcategory.name.title }}</h1></div>
     <div class="cont">
         {% for product in products %}
             <div class="product frame">
@@ -25,14 +25,18 @@
 {% endblock %}
 
 {% block aside_content %}
-{#    {% for cat in ca%}#}
-{#        <ul class="list-group">#}
-{#            <li class="list-group-item">#}
-{#                <span class="badge">14</span>#}
-{#                Cras justo odio#}
-{#            </li>#}
-{#        </ul>#}
-{#        <li role="separator" class="divider"></li>#}
-{#    {% endfor %}#}
+    {% for attr in filters %}
+        <ul class="list-group">
+            <h4>
+                {{ attr.0.attr }}
+            </h4>
+            {% for opt in attr %}
+                <li class="list-group-item">
+                    <span class="badge">{{ opt.prod_num }}</span>
+                    {{ opt.opt }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
 {% endblock %}
 
