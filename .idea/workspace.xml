@@ -11,7 +11,6 @@
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/attributes/admin.py" afterPath="$PROJECT_DIR$/attributes/admin.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/attributes/models.py" afterPath="$PROJECT_DIR$/attributes/models.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/products/templates/subcategory_products/subcategory_products.html" afterPath="$PROJECT_DIR$/products/templates/subcategory_products/subcategory_products.html" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/products/urls.py" afterPath="$PROJECT_DIR$/products/urls.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/products/views.py" afterPath="$PROJECT_DIR$/products/views.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/static/base_css.css" afterPath="$PROJECT_DIR$/static/base_css.css" />
@@ -54,25 +53,12 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="views.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/products/views.py">
+      <file leaf-file-name="subcategory_products.html" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/products/templates/subcategory_products/subcategory_products.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="311">
-              <caret line="65" column="8" lean-forward="true" selection-start-line="65" selection-start-column="8" selection-end-line="65" selection-end-column="8" />
-              <folding>
-                <element signature="e#0#64#0" expanded="true" />
-                <marker date="1480676186968" expanded="true" signature="1210:1282" ph="SELECT * FRO... products_product" />
-                <marker date="1480676186968" expanded="true" signature="1615:1688" ph="SELECT * FRO... products_product" />
-                <marker date="1480676186968" expanded="true" signature="1615:2006" ph="SELECT p.id,... products_product" />
-                <marker date="1480676186968" expanded="true" signature="1615:2033" ph="SELECT p.id,... products_product" />
-                <marker date="1480676186968" expanded="true" signature="1615:2038" ph="SELECT p.id,... products_product" />
-                <marker date="1480676186968" expanded="true" signature="2176:2514" ph="SELECT a.nam... " />
-                <marker date="1480676186968" expanded="true" signature="2176:2547" ph="SELECT DISTI... products_product" />
-                <marker date="1480676186968" expanded="true" signature="3436:3672" ph="SELECT ov.id... attributes_optionvalue" />
-                <marker date="1480676186968" expanded="true" signature="3677:4003" ph="SELECT iv.id... attributes_intvalue" />
-                <marker date="1480676186968" expanded="true" signature="4008:4336" ph="SELECT fv.id... attributes_floatvalue" />
-                <marker date="1480676186968" expanded="true" signature="4341:4524" ph="SELECT vcv.i... attributes_varcharvalue" />
-              </folding>
+            <state relative-caret-position="685">
+              <caret line="33" column="42" lean-forward="true" selection-start-line="33" selection-start-column="42" selection-end-line="33" selection-end-column="42" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -126,9 +112,9 @@
         <option value="$PROJECT_DIR$/static/base_template.html" />
         <option value="$PROJECT_DIR$/products/urls.py" />
         <option value="$PROJECT_DIR$/attributes/models.py" />
-        <option value="$PROJECT_DIR$/products/templates/subcategory_products/subcategory_products.html" />
         <option value="$PROJECT_DIR$/static/base_css.css" />
         <option value="$PROJECT_DIR$/products/views.py" />
+        <option value="$PROJECT_DIR$/products/templates/subcategory_products/subcategory_products.html" />
       </list>
     </option>
   </component>
@@ -1380,30 +1366,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/products/templates/subcategory_products/subcategory_products.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="773">
-          <caret line="37" column="24" lean-forward="false" selection-start-line="37" selection-start-column="24" selection-end-line="37" selection-end-column="24" />
-          <folding>
-            <marker date="1480676055074" expanded="true" signature="35:1189" ph="{% block content ... %}" />
-            <marker date="1480676055074" expanded="true" signature="164:1173" ph="..." />
-            <marker date="1480676055074" expanded="true" signature="174:1163" ph="{% for product in products ... %}" />
-            <marker date="1480676055074" expanded="true" signature="242:1141" ph="..." />
-            <marker date="1480676055074" expanded="true" signature="305:623" ph="..." />
-            <marker date="1480676055074" expanded="true" signature="353:531" ph="..." />
-            <marker date="1480676055074" expanded="true" signature="434:504" ph="..." />
-            <marker date="1480676055074" expanded="true" signature="666:973" ph="..." />
-            <marker date="1480676055074" expanded="true" signature="1016:1122" ph="..." />
-            <marker date="1480676055074" expanded="true" signature="1191:1619" ph="{% block aside_content ... %}" />
-            <marker date="1480676055074" expanded="true" signature="1221:1604" ph="{% for attr in filters ... %}" />
-            <marker date="1480676055074" expanded="true" signature="1277:1586" ph="..." />
-            <marker date="1480676055074" expanded="true" signature="1294:1346" ph="..." />
-            <marker date="1480676055074" expanded="true" signature="1360:1573" ph="{% for opt in attr ... %}" />
-            <marker date="1480676055074" expanded="true" signature="1425:1547" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/static/base_template.html">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="443">
@@ -1469,22 +1431,43 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/products/views.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="311">
-          <caret line="65" column="8" lean-forward="true" selection-start-line="65" selection-start-column="8" selection-end-line="65" selection-end-column="8" />
+        <state relative-caret-position="663">
+          <caret line="81" column="37" lean-forward="false" selection-start-line="81" selection-start-column="37" selection-end-line="81" selection-end-column="37" />
           <folding>
-            <element signature="e#0#64#0" expanded="true" />
+            <marker date="1480676186968" expanded="true" signature="0:148" ph="import ..." />
+            <marker date="1480676186968" expanded="true" signature="268:1103" ph="..." />
+            <marker date="1480676186968" expanded="true" signature="323:997" ph="..." />
+            <marker date="1480676186968" expanded="true" signature="415:733" ph="..." />
+            <marker date="1480676186968" expanded="true" signature="747:997" ph="..." />
+            <marker date="1480676186968" expanded="true" signature="819:960" ph="..." />
+            <marker date="1480676186968" expanded="true" signature="1125:1393" ph="..." />
             <marker date="1480676186968" expanded="true" signature="1210:1282" ph="SELECT * FRO... products_product" />
+            <marker date="1480676186968" expanded="true" signature="1446:3246" ph="..." />
+            <marker date="1480676186968" expanded="true" signature="1612:2041" ph="'''...'''" />
             <marker date="1480676186968" expanded="true" signature="1615:1688" ph="SELECT * FRO... products_product" />
             <marker date="1480676186968" expanded="true" signature="1615:2006" ph="SELECT p.id,... products_product" />
             <marker date="1480676186968" expanded="true" signature="1615:2033" ph="SELECT p.id,... products_product" />
             <marker date="1480676186968" expanded="true" signature="1615:2038" ph="SELECT p.id,... products_product" />
+            <marker date="1480676186968" expanded="true" signature="2168:2555" ph="'''...'''" />
             <marker date="1480676186968" expanded="true" signature="2176:2514" ph="SELECT a.nam... " />
             <marker date="1480676186968" expanded="true" signature="2176:2547" ph="SELECT DISTI... products_product" />
+            <marker date="1480676186968" expanded="true" signature="2829:3244" ph="..." />
+            <marker date="1480676186968" expanded="true" signature="3287:4768" ph="..." />
+            <marker date="1480676186968" expanded="true" signature="3428:4532" ph="'''...'''" />
             <marker date="1480676186968" expanded="true" signature="3436:3672" ph="SELECT ov.id... attributes_optionvalue" />
             <marker date="1480676186968" expanded="true" signature="3677:4003" ph="SELECT iv.id... attributes_intvalue" />
             <marker date="1480676186968" expanded="true" signature="4008:4336" ph="SELECT fv.id... attributes_floatvalue" />
             <marker date="1480676186968" expanded="true" signature="4341:4524" ph="SELECT vcv.i... attributes_varcharvalue" />
+            <marker date="1480676186968" expanded="true" signature="4847:4949" ph="..." />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/products/templates/subcategory_products/subcategory_products.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="685">
+          <caret line="33" column="42" lean-forward="true" selection-start-line="33" selection-start-column="42" selection-end-line="33" selection-end-column="42" />
+          <folding />
         </state>
       </provider>
     </entry>
