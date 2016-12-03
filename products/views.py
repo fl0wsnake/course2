@@ -9,8 +9,9 @@ from itertools import groupby
 def get_filtered_products(query, filters, raw_data):
     # WHERE str
     count = 0
+    # options = {}
     for attr in filters:
-        attr_type = Attribute.objects.get(id=attr).type
+        attr_type = Attribute.objects.get(name=attr).type
         if attr_type.type == "num":
             gap = attr[0].split('-')
             raw_data[str(count)] = gap[0]
@@ -19,14 +20,15 @@ def get_filtered_products(query, filters, raw_data):
             count += 1
             query += ' (attributes_' + attr_type + '.value BETWEEN %(' + str(count - 2)
             ')s AND %(' + str(count - 1)
-            ')s) AND'
+            ')s)'
         else:
             query += ' ('
             for val in filters.getlist(attr):
-                raw_data[str(count)] = val
-                query += '(ov.option_id = %(' + str(count) + ')s) OR '
+                raw_data[str(count)] = "'%s'" % val
+                query += '(LOWER(o.name) = %(' + str(count) + ')s) OR '
                 count += 1
             query = query[:-4] + ')'
+        query += ' AND'
 
     if query[-4:] == ' AND':
         query = query[:-4]
@@ -50,6 +52,7 @@ def subcategory_products(request, subcategory_id):
     FROM products_product p
     JOIN products_subcategory sc ON p.subcategory_id = sc.id
     LEFT JOIN attributes_optionvalue ov ON p.id = ov.product_id
+    JOIN attributes_option o ON ov.option_id = o.id
     LEFT JOIN attributes_intvalue iv ON p.id = iv.product_id
     LEFT JOIN attributes_floatvalue fv ON p.id = fv.product_id
     LEFT JOIN attributes_varcharvalue vcv ON p.id = vcv.product_id
