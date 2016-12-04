@@ -25,18 +25,42 @@
 {% endblock %}
 
 {% block aside_content %}
-    {% for attr in filters %}
-        <ul class="list-group">
-            <h4>
-                {{ attr.0.attr }}
-            </h4>
-            {% for opt in attr %}
-                <li class="list-group-item">
-                    <span class="badge">{{ opt.prod_num }}</span>
-                    {{ opt.opt }}
-                </li>
-            {% endfor %}
-        </ul>
-    {% endfor %}
+{% verbatim %}
+{#        {% for attr, opts in filters.items %}#}
+{#            <ul class="list-group">#}
+{#                <h4>#}
+{#                    {{ attr }}#}
+{#                </h4>#}
+{#                {% for opt in opts %}#}
+{#                    <li class="list-group-item filter">#}
+{#                        <span class="badge">{{ opt.prod_num }}</span>#}
+{#                        {{ opt.opt }}#}
+{#                    </li>#}
+{#                {% endfor %}#}
+{#            </ul>#}
+{#        {% endfor %}#}
+    <ul class="list-griup" v-for="attr in filters">
+        <h4>
+            {{ attr.attr }}
+        </h4>
+    </ul>
+    {% endverbatim %}
+{% endblock %}
+
+{% block js %}
+    <script>
+        (function () {
+            var vue = new Vue({
+                el: ".aside-content",
+                data: {
+                    filters: {% autoescape off %}{{ filters }}{% endautoescape %}
+                }
+            })
+            var a = location.pathname.split('/')
+            var filters = a[a.length - 1]
+
+        })()
+
+    </script>
 {% endblock %}
 

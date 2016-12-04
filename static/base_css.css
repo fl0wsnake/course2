@@ -116,12 +116,12 @@ img {
     margin-bottom: 8px;
 }
 
-.product_info_bar {
+.product-info-bar {
     width: 100%;
     margin-bottom: 8px;
 }
 
-.product_info_bar .img-container {
+.product-info-bar .img-container {
     width: 400px;
     height: 500px;
     margin: 0 8px 8px 0;

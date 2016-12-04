@@ -9,7 +9,7 @@
     <script src="{% static "node_modules/bootstrap/dist/js/bootstrap.min.js" %}"></script>
     <script src="{% static "node_modules/vue/dist/vue.min.js" %}"></script>
     <link rel="stylesheet" href="{% static "base_css.css" %}">
-    <script src="{% static "base_js.js" %}"></script>
+    <script src="{% static "node_modules/vue/dist/vue.min.js" %}"></script>
 </head>
 <body>
 <nav class="navbar navbar-inverse .navbar-fixed-top">
@@ -37,7 +37,7 @@
             {% for cat in all_categories %}
                 <li class="dropdown-header">{{ cat }}</li>
                 {% for subcat in cat.get_subcategories %}
-                    <li><a href="{% url 'subcategory_products' subcat.id %}">{{ subcat }}</a></li>
+                    <li><a href="{% url 'subcategory_products' subcat.name %}">{{ subcat.name | title }}</a></li>
                 {% endfor %}
                 <li role="separator" class="divider"></li>
             {% endfor %}
@@ -50,5 +50,6 @@
 <div class="content">
     {% block content %} {% endblock %}
 </div>
+{% block js %}{% endblock %}
 </body>
 </html>

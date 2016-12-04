@@ -2,14 +2,15 @@
 {% block title %}{{ product.name }}{% endblock %}
 {% block content %}
     <div class="content-header page-header"><h1>Top sales</h1></div>
-    <div class="product_info_bar frame">
+    <div class="product-info-bar frame">
         <div class="img-container frame">
             <img src="{{ MEDIA_URL }}{{ product.title_image.img }}" alt="there should have been an image...">
         </div>
-        <div class="purchase-product-bar">
+        <p class="purchase-product-bar">
             <span>{{ product.price }} USD</span>
             <a href="{% url 'purchase_product' product.id %}">Purchase</a>
-        </div>
+        </p>
+        <p>{{ product.description }}</p>
     </div>
     <div class="product-info-bar frame">
         {% for attr in attributes %}

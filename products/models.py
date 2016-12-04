@@ -8,7 +8,7 @@ class Category(models.Model):
         return self.subcategory_set.all()
 
     def __str__(self):
-        return self.name.title()
+        return self.name
 
 
 class Subcategory(models.Model):
@@ -16,7 +16,7 @@ class Subcategory(models.Model):
     name = models.CharField(max_length=100)
 
     def __str__(self):
-        return self.name.title()
+        return self.name
 
 
 class Image(models.Model):
