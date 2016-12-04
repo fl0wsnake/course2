@@ -1,0 +1,14 @@
+<div class="btn-group">
+    <button class="btn btn-default btn-lg dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true"
+            aria-expanded="false">
+        <span id="sort-dropdown">{% verbatim %} {{ curSortText }} {% endverbatim %}</span>
+        <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu">
+        <li class="list-group-item option" v-for="pair in buttText" v-on:click="curSort = pair.val">
+            {% verbatim %} {{ pair.text }} {% endverbatim %}
+        </li>
+        {#        <li class="list-group-item option" v-on:click="url = ['sort', 'priceDesc']">From expensive to cheap</li>#}
+        {#        <li class="list-group-item option" v-on:click="url = ['sort', 'rating']">By rating</li>#}
+    </ul>
+</div>

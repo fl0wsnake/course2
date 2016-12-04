@@ -8,6 +8,15 @@ from django.core.serializers.json import DjangoJSONEncoder
 
 # from django.views.decorators.http import require_http_methods
 
+
+def sort_query(query, request):
+    if 'sort' in request.GET:
+        str = request.GET['sort']
+    else:
+        str = 'rating'
+    return query + (' ORDER BY p.price' if str == 'price' else ' ORDER BY p.price DESC' if str == 'priceDesc' else ' ORDER BY p.rating DESC')
+
+
 def get_filtered_products(query, filters, raw_data):
     options = {}
     for attr in filters:
@@ -42,7 +51,8 @@ def get_filtered_products(query, filters, raw_data):
 
 def index(request):
     all_categories = Category.objects.all()
-    top_products = Product.objects.raw('SELECT * FROM products_product ORDER BY products_product.rating LIMIT 16')
+    top_products = Product.objects.raw(
+        sort_query('SELECT * FROM products_product p', request) + ' LIMIT 16')
     return render(request, 'index/index.html', {'all_categories': all_categories, 'products': top_products})
 
 
@@ -112,6 +122,8 @@ def subcategory_products(request, subcategory_name):
 
     attrs = {}
     for attr in request.GET:
+        if attr == 'sort':
+            continue
         attr_type = get_object_or_404(Attribute, name=attr).type.name
         if attr_type not in attrs:
             attrs[attr_type] = {}
@@ -134,6 +146,8 @@ def subcategory_products(request, subcategory_name):
     if 'floatvalue' in attrs:
         query = float_filter(query, attrs['floatvalue'], data)
 
+    query = sort_query(query, request)
+
     products = Product.objects.raw(query, data)
 
     filters_query = Attribute.objects.raw('''
@@ -152,12 +166,12 @@ def subcategory_products(request, subcategory_name):
     prev_attr = '0'
     i = -1
     for opt in filters_query:
-        if opt != prev_attr:
+        if opt.attr != prev_attr:
             filters.append({'attr': opt.attr, 'opts': [{'opt': opt.opt, 'prod_num': opt.prod_num}]})
             prev_attr = opt.attr
             i += 1
         else:
-            filters[i].opts.append({'opt': opt.opt, 'prod_num': opt.prod_num})
+            filters[i]['opts'].append({'opt': opt.opt, 'prod_num': opt.prod_num})
 
     return render(request, 'subcategory_products/subcategory_products.html', {'all_categories': all_categories,
                                                                               'subcategory': subcategory,

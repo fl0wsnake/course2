@@ -1,6 +1,7 @@
 {% extends "base_template.html" %}
 {% block content %}
-    <div class="content-header page-header"><h1>{{ subcategory.name.title }}</h1></div>
+    <div class="content-header page-header">
+        <h1>{{ subcategory.name.title }}</h1>{% include 'embeddable/sort_dropdown.html' %}</div>
     <div class="cont">
         {% for product in products %}
             <div class="product frame">
@@ -14,7 +15,7 @@
                 <div class="product-bar1">
                     <div class="product-price">{{ product.price | floatformat }} usd</div>
                     <div class="product-rating">{{ product.rating }}<span class="glyphicon glyphicon-star"></span></div>
-                    <div class="product-comments-num">69 comments</div>
+                    {#                    <div class="product-comments-num">69 comments</div>#}
                 </div>
                 <div class="product-bar2">
                     <a href=""><span class="glyphicon glyphicon-heart"></span></a>
@@ -42,9 +43,14 @@
     <script>
         (function () {
             let vue = new Vue({
-                el: ".aside-content",
+                el: "#body",
                 data: {
                     attrs: {% autoescape off %}{{ filters }}{% endautoescape %},
+                    buttText: [
+                        {val: 'price', text: 'From cheap to expensive'},
+                        {val: 'pricedesc', text: 'From expensive to cheap'},
+                        {val: 'rating', text: 'By rating'}
+                    ]
                 },
                 computed: {
                     url: {
@@ -54,7 +60,7 @@
                                 return r
                             location.search.substr(1).split('&').forEach(s => {
                                 let p = s.split('=')
-                                if (!(p[0] in r))
+                                if (!r[p[0]])
                                     r[p[0]] = {}
                                 r[p[0]][p[1]] = true
                             })
@@ -75,20 +81,35 @@
                                 s = s.substr(0, s.length - 1)
                             location.search = s
                         }
+                    },
+                    curSort: {
+                        get: function () {
+                            return 'sort' in this.url ? Object.keys(this.url['sort'])[0] : 'rating'
+                        },
+                        set: function (sortVal) {
+                            for (let k in this.url) delete this.url[k];
+                            this.url = ['sort', sortVal]
+                        }
+                    },
+                    curSortText: function(){
+                        return this.buttText.find(x=>x.val == this.curSort).text
                     }
                 },
                 created: function () {
-                    {#                    this.attrs.forEach(attr => attr.opts.forEach(o => (o.selected = false, o.attr = attr)))#}
-                    {#                    if (location.search.length > 1)#}
-                    {#                        location.search.substr(1).split('&').forEach(s => {#}
-                    {#                            let pair = s.split('=')#}
-                    {#                            this.attrs.find(a => a.attr.toLowerCase() == pair[0]).opts.find(a => a.attr == a[1]).selected = true#}
-                    {#                        })#}
                     this.attrs.forEach(a => a.opts.forEach(o => {
-                        o.selected = !!this.url[a.attr.toLowerCase()] && !!this.url[a.attr.toLowerCase()][o.opt.toLowerCase()];
+                        o.selected = !!this.url[a.attr.toLowerCase()] && !!this.url[a.attr.toLowerCase()][o.opt.toLowerCase()]
                         o.attr = a
                     }))
+                    {#                    if ('sort' in this.url) {#}
+                    {#                        let s = Object.keys(this.url['sort'])[0]#}
+                    {#                        $('#sort-dropdown').text(s == 'price' ? '')#}
+                    {#                    }#}
+                    {#                    else#}
+                    {#                        $('#sort-dropdown').text('By rating')#}
                 },
+{#                mounted: function () {#}
+{#                    console.log(this.curSort)#}
+{#                }#}
             })
 
         })()

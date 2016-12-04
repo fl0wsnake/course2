@@ -2,8 +2,12 @@ html, body {
     height: 100%;
 }
 
+#body {
+    float: none;
+}
+
 div {
-    float: left;
+float: left;
 }
 
 .container-fluid {
@@ -136,7 +140,7 @@ img {
     padding-right: 4px;
 }
 
-.option{
+.option {
     cursor: pointer;
 }
 
