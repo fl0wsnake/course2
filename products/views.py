@@ -18,7 +18,8 @@ def get_filtered_products(query, filters, raw_data):
             raw_data.append(attr)
             raw_data.append(gap[0])
             raw_data.append(gap[1])
-            query += ' (LOWER(a.name) = %s AND ' + ('(iv' if attr_type.name == 'intvalue' else 'fv') + '.value BETWEEN %s AND %s)) AND'
+            query += ' (LOWER(a.name) = %s AND ' + (
+                '(iv' if attr_type.name == 'intvalue' else 'fv') + '.value BETWEEN %s AND %s)) AND'
         elif attr_type.type == "option":
             options[attr] = filters.getlist(attr)
 
@@ -45,23 +46,95 @@ def index(request):
     return render(request, 'index/index.html', {'all_categories': all_categories, 'products': top_products})
 
 
+def option_filter(query, attrs, data):
+    query = '''SELECT p.id, p.name, p.price, p.rating, COUNT(*) AS count
+    FROM (%s) as p
+    LEFT JOIN attributes_optionvalue ov ON p.id = ov.product_id
+    LEFT JOIN attributes_option o ON ov.option_id = o.id
+    LEFT JOIN attributes_attribute a ON o.attribute_id = a.id
+    WHERE
+    ''' % query
+    for attr in attrs:
+        for opt in attrs[attr]:
+            data.append(attr)
+            data.append(opt)
+            query += '(LOWER(a.name) = %s AND LOWER(o.name) = %s) OR '
+
+    query = query[:-4]
+    query += ' GROUP BY p.id, p.name, p.price, p.rating HAVING count = %s' % len(attrs)
+
+    return query
+
+
+def int_filter(query, attrs, data):
+    query = '''SELECT p.id, p.name, p.price, p.rating, COUNT(*) AS count
+    FROM (%s) as p
+    LEFT JOIN attributes_intvalue iv ON p.id = iv.product_id
+    LEFT JOIN attributes_attribute a ON iv.attribute_id = a.id
+    WHERE
+    ''' % query
+    for attr in attrs:
+        gap = attrs[attr][0].split('-')
+        data.append(attr)
+        data.append(gap[0])
+        data.append(gap[1])
+        query += ' (LOWER(a.name) = %s AND (iv.value BETWEEN %s AND %s)) AND'
+
+    query = query[:-4]
+    query += ' GROUP BY p.id, p.name, p.price, p.rating HAVING count = %s' % len(attrs)
+
+    return query
+
+
+def float_filter(query, attrs, data):
+    query = '''SELECT p.id, p.name, p.price, p.rating, COUNT(*) AS count
+    FROM (%s) as p
+    LEFT JOIN attributes_floatvalue fv ON p.id = fv.product_id
+    LEFT JOIN attributes_attribute a ON fv.attribute_id = a.id
+    WHERE
+    ''' % query
+    for attr in attrs:
+        gap = attrs[attr][0].split('-')
+        data.append(attr)
+        data.append(gap[0])
+        data.append(gap[1])
+        query += ' (LOWER(a.name) = %s AND (fv.value BETWEEN %s AND %s)) AND'
+
+    query = query[:-4]
+    query += ' GROUP BY p.id, p.name, p.price, p.rating HAVING count = %s' % len(attrs)
+
+    return query
+
+
 def subcategory_products(request, subcategory_name):
     subcategory = get_object_or_404(Subcategory, name=subcategory_name)
     all_categories = Category.objects.all()
-    cursor = connection.cursor
 
-    query = '''SELECT p.id, p.name, p.price, p.rating, COUNT(*) AS count
+    attrs = {}
+    for attr in request.GET:
+        attr_type = get_object_or_404(Attribute, name=attr).type.name
+        if attr_type not in attrs:
+            attrs[attr_type] = {}
+        if attr not in attrs[attr_type]:
+            attrs[attr_type][attr] = []
+        for opt in request.GET.getlist(attr):
+            attrs[attr_type][attr].append(opt)
+
+    query = '''SELECT p.id, p.name, p.price, p.rating
     FROM products_product p
     JOIN products_subcategory sc ON p.subcategory_id = sc.id
-    LEFT JOIN attributes_optionvalue ov ON p.id = ov.product_id
-    LEFT JOIN attributes_option o ON ov.option_id = o.id
-    LEFT JOIN attributes_intvalue iv ON p.id = iv.product_id
-    LEFT JOIN attributes_floatvalue fv ON p.id = fv.product_id
-    LEFT JOIN attributes_varcharvalue vcv ON p.id = vcv.product_id
-    WHERE (sc.id = %s) AND'''
+    WHERE (sc.id = %s)'''
 
-    raw_data = [subcategory.id]
-    products = Product.objects.raw(get_filtered_products(query, request.GET, raw_data), raw_data)
+    data = [subcategory.id]
+
+    if 'optionvalue' in attrs:
+        query = option_filter(query, attrs['optionvalue'], data)
+    if 'intvalue' in attrs:
+        query = int_filter(query, attrs['intvalue'], data)
+    if 'floatvalue' in attrs:
+        query = float_filter(query, attrs['floatvalue'], data)
+
+    products = Product.objects.raw(query, data)
 
     filters_query = Attribute.objects.raw('''
     SELECT DISTINCT a.id, a.name AS attr, o.name AS opt, COUNT(ov.product_id) AS prod_num
@@ -75,18 +148,7 @@ def subcategory_products(request, subcategory_name):
     ORDER BY a.id
     ''', {'cat': subcategory.id})
 
-    # from collections import defaultdict
-    # groups = defaultdict(dict)
-    # for obj in filters_query:
-    #     groups[obj.attr].append(obj)
-    #
-    # filters = groups.values()
     filters = []
-    # for opt in filters_query:
-    #     if opt.attr not in filters:
-    #         filters[opt.attr] = [{'opt': opt.opt, 'prod_num': opt.prod_num}]
-    #     else:
-    #         filters[opt.attr].append({'opt': opt.opt, 'prod_num': opt.prod_num})
     prev_attr = '0'
     i = -1
     for opt in filters_query:
@@ -96,7 +158,6 @@ def subcategory_products(request, subcategory_name):
             i += 1
         else:
             filters[i].opts.append({'opt': opt.opt, 'prod_num': opt.prod_num})
-
 
     return render(request, 'subcategory_products/subcategory_products.html', {'all_categories': all_categories,
                                                                               'subcategory': subcategory,
