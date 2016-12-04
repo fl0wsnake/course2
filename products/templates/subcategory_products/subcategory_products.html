@@ -25,42 +25,73 @@
 {% endblock %}
 
 {% block aside_content %}
-{% verbatim %}
-{#        {% for attr, opts in filters.items %}#}
-{#            <ul class="list-group">#}
-{#                <h4>#}
-{#                    {{ attr }}#}
-{#                </h4>#}
-{#                {% for opt in opts %}#}
-{#                    <li class="list-group-item filter">#}
-{#                        <span class="badge">{{ opt.prod_num }}</span>#}
-{#                        {{ opt.opt }}#}
-{#                    </li>#}
-{#                {% endfor %}#}
-{#            </ul>#}
-{#        {% endfor %}#}
-    <ul class="list-griup" v-for="attr in filters">
+    {% verbatim %}
+    <ul class="list-group" v-for="attr in attrs">
         <h4>
             {{ attr.attr }}
         </h4>
+        <li v-for="opt in attr.opts" class="list-group-item option" v-bind:class="{active: opt.selected}"
+            v-on:click="url = [opt.attr.attr, opt.opt]">
+            <span class="badge">{{ opt.prod_num }}</span>
+            <span>{{ opt.opt }}</span>
+        </li>
     </ul>
     {% endverbatim %}
 {% endblock %}
-
 {% block js %}
     <script>
         (function () {
-            var vue = new Vue({
+            let vue = new Vue({
                 el: ".aside-content",
                 data: {
-                    filters: {% autoescape off %}{{ filters }}{% endautoescape %}
-                }
+                    attrs: {% autoescape off %}{{ filters }}{% endautoescape %},
+                },
+                computed: {
+                    url: {
+                        get: function () {
+                            let r = {}
+                            if (location.search.length < 2)
+                                return r
+                            location.search.substr(1).split('&').forEach(s => {
+                                let p = s.split('=')
+                                if (!(p[0] in r))
+                                    r[p[0]] = {}
+                                r[p[0]][p[1]] = true
+                            })
+                            return r
+                        },
+                        set: function (arr) {
+                            attr = arr[0].toLowerCase()
+                            opt = arr[1].toLowerCase()
+                            let s = ""
+                            if (!this.url[attr])
+                                this.url[attr] = {}
+                            this.url[attr][opt] = !this.url[attr][opt]
+                            for (let a in this.url)
+                                for (let o in this.url[a])
+                                    if (this.url[a][o])
+                                        s += a + '=' + o + '&'
+                            if (s[s.length - 1] == '&')
+                                s = s.substr(0, s.length - 1)
+                            location.search = s
+                        }
+                    }
+                },
+                created: function () {
+                    {#                    this.attrs.forEach(attr => attr.opts.forEach(o => (o.selected = false, o.attr = attr)))#}
+                    {#                    if (location.search.length > 1)#}
+                    {#                        location.search.substr(1).split('&').forEach(s => {#}
+                    {#                            let pair = s.split('=')#}
+                    {#                            this.attrs.find(a => a.attr.toLowerCase() == pair[0]).opts.find(a => a.attr == a[1]).selected = true#}
+                    {#                        })#}
+                    this.attrs.forEach(a => a.opts.forEach(o => {
+                        o.selected = !!this.url[a.attr.toLowerCase()] && !!this.url[a.attr.toLowerCase()][o.opt.toLowerCase()];
+                        o.attr = a
+                    }))
+                },
             })
-            var a = location.pathname.split('/')
-            var filters = a[a.length - 1]
 
         })()
-
     </script>
 {% endblock %}
 

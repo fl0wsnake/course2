@@ -135,3 +135,8 @@ img {
     width: 100%;
     padding-right: 4px;
 }
+
+.option{
+    cursor: pointer;
+}
+

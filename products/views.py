@@ -13,18 +13,21 @@ def get_filtered_products(query, filters, raw_data):
     for attr in filters:
         attr_type = get_object_or_404(Attribute, name=attr).type
         if attr_type.type == "num":
+
             gap = filters[attr].split('-')
+            raw_data.append(attr)
             raw_data.append(gap[0])
             raw_data.append(gap[1])
-            query += ' (' + ('iv' if attr_type.name == 'intvalue' else 'fv') + '.value BETWEEN %s AND %s) AND'
+            query += ' (LOWER(a.name) = %s AND ' + ('(iv' if attr_type.name == 'intvalue' else 'fv') + '.value BETWEEN %s AND %s)) AND'
         elif attr_type.type == "option":
             options[attr] = filters.getlist(attr)
 
     query += ' ('
     for attr in options:
         for opt in options[attr]:
+            raw_data.append(attr)
             raw_data.append(opt)
-            query += '(LOWER(o.name) = %s) OR '
+            query += '(LOWER(a.name) = %s AND LOWER(o.name) = %s) OR '
 
     if query[-6:] == ' AND (':
         query = query[:-6]
@@ -93,6 +96,7 @@ def subcategory_products(request, subcategory_name):
             i += 1
         else:
             filters[i].opts.append({'opt': opt.opt, 'prod_num': opt.prod_num})
+
 
     return render(request, 'subcategory_products/subcategory_products.html', {'all_categories': all_categories,
                                                                               'subcategory': subcategory,
