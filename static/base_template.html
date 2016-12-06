@@ -24,27 +24,7 @@
             </ul>
         </div>
     </nav>
-    <div class="aside">
-        <div class="btn-group">
-            <button class="btn btn-default btn-lg dropdown-toggle" type="button" data-toggle="dropdown"
-                    aria-haspopup="true"
-                    aria-expanded="false">
-                Catalogue <span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu">
-                {% for cat in all_categories %}
-                    <li class="dropdown-header">{{ cat }}</li>
-                    {% for subcat in cat.get_subcategories %}
-                        <li><a href="{% url 'subcategory_products' subcat.name %}">{{ subcat.name | title }}</a></li>
-                    {% endfor %}
-                    <li role="separator" class="divider"></li>
-                {% endfor %}
-            </ul>
-        </div>
-        <div class="aside-content">
-            {% block aside_content %}{% endblock %}
-        </div>
-    </div>
+    {% block aside %}{% endblock %}
     <div class="content">
         {% block content %} {% endblock %}
     </div>

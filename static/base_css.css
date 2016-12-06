@@ -4,6 +4,7 @@ html, body {
 
 #body {
     float: none;
+    height: 100%;
 }
 
 [v-cloak] {

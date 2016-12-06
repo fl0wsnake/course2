@@ -1,7 +1,5 @@
 from django.conf.urls import url
 from . import views
-from django.conf import settings
-from django.conf.urls.static import static
 
 urlpatterns = [
                   url(r'^$', views.index, name='index'),
@@ -9,4 +7,4 @@ urlpatterns = [
                   url(r'^subcategory/(?P<subcategory_name>[a-zA-Z]+)$', views.subcategory_products,
                       name='subcategory_products'),
                   url(r'^purchase/(?P<product_id>[0-9]+)$', views.purchase_product, name='purchase_product')
-              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+              ]

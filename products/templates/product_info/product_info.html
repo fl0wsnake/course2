@@ -1,5 +1,8 @@
 {% extends "base_template.html" %}
 {% block title %}{{ product.name }}{% endblock %}
+{% block aside %}
+    {% include 'embeddable/aside.html' %}
+{% endblock %}
 {% block content %}
     <div class="content-header page-header"><h1>{{ product.name }}</h1></div>
     <div class="product-info-bar frame">

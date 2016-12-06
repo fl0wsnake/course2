@@ -4,6 +4,10 @@
     {% include 'embeddable/search.html' %}
 {% endblock %}
 
+{% block aside %}
+    {% include 'embeddable/aside_with_filters.html' %}
+{% endblock %}
+
 {% block content %}
     <div class="content-header page-header" v-cloak>
         <h1>{{ title | title }}</h1>{% include 'embeddable/sort_dropdown.html' %}</div>
@@ -14,20 +18,6 @@
     </div>
 {% endblock %}
 
-{% block aside_content %}
-    {% verbatim %}
-    <ul class="list-group" v-for="attr in attrs" v-cloak>
-        <h4>
-            {{ attr.attr }}
-        </h4>
-        <li v-for="opt in attr.opts" class="list-group-item option" v-bind:class="{active: opt.selected}"
-            v-on:click="url = [opt.attr.attr, opt.opt]">
-            <span class="badge">{{ opt.prod_num }}</span>
-            <span>{{ opt.opt }}</span>
-        </li>
-    </ul>
-    {% endverbatim %}
-{% endblock %}
 {% block js %}
     <script>
         (function () {
