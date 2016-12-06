@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 
 import os
 
+LOGIN_REDIRECT_URL = 'index'
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -32,8 +34,7 @@ INSTALLED_APPS = [
     'products.apps.ProductsConfig',
     'orders.apps.OrdersConfig',
     'users.apps.UsersConfig',
-    'baskets.apps.BasketsConfig',
-    'comments.apps.CommentsConfig',
+    # 'comments.apps.CommentsConfig',
     'attributes.apps.AttributesConfig',
     'django.contrib.admin',
     'django.contrib.auth',

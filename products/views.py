@@ -1,7 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import *
 from attributes.models import *
-from django.db import connection
 import json
 from django.core.serializers.json import DjangoJSONEncoder
 
@@ -15,7 +14,7 @@ def sort_query(query, request):
     else:
         str = 'rating'
     return query + (
-    ' ORDER BY p.price' if str == 'price' else ' ORDER BY p.price DESC' if str == 'priceDesc' else ' ORDER BY p.rating DESC')
+        ' ORDER BY p.price' if str == 'price' else ' ORDER BY p.price DESC' if str == 'priceDesc' else ' ORDER BY p.rating DESC')
 
 
 def get_filtered_products(query, filters, raw_data):
@@ -54,7 +53,7 @@ def index(request):
     all_categories = Category.objects.all()
     top_products = Product.objects.raw(
         sort_query('SELECT * FROM products_product p', request) + ' LIMIT 16')
-    return render(request, 'index/index.html', {'all_categories': all_categories, 'products': top_products})
+    return render(request, 'index.html', {'all_categories': all_categories, 'products': top_products})
 
 
 def option_filter(query, attrs, data):
@@ -185,58 +184,12 @@ def subcategory_products(request, subcategory_name):
 
     filters = make_2d_filters(filters_query)
 
-    return render(request, 'subcategory_products/subcategory_products.html', {'all_categories': all_categories,
+    return render(request, 'subcategory_products.html', {'all_categories': all_categories,
                                                                               'title': subcategory.name,
                                                                               'products': products,
                                                                               'filters': json.dumps(filters,
                                                                                                     cls=DjangoJSONEncoder)
                                                                               })
-
-
-# def search_products(request):
-#     all_categories = Category.objects.all()
-#     substr = request.
-#
-#     attrs = parseUrl(request)
-#
-#     query = '''SELECT p.id, p.name, p.price, p.rating
-#     FROM products_product p
-#     JOIN products_subcategory sc ON p.subcategory_id = sc.id
-#     WHERE (p.name LIKE %s)'''
-#
-#     data = ['%' + substr + '%']
-#
-#     if 'optionvalue' in attrs:
-#         query = option_filter(query, attrs['optionvalue'], data)
-#     if 'intvalue' in attrs:
-#         query = int_filter(query, attrs['intvalue'], data)
-#     if 'floatvalue' in attrs:
-#         query = float_filter(query, attrs['floatvalue'], data)
-#
-#     query = sort_query(query, request)
-#
-#     products = Product.objects.raw(query, data)
-#
-#     filters_query = Attribute.objects.raw('''
-#     SELECT DISTINCT a.id, a.name AS attr, o.name AS opt, COUNT(ov.product_id) AS prod_num
-#     FROM products_product p
-#     JOIN attributes_optionvalue ov ON p.id = ov.product_id
-#     JOIN attributes_option o ON ov.option_id = o.id
-#     JOIN attributes_attribute a ON o.attribute_id = a.id
-#     WHERE p.name LIKE %s
-#     GROUP BY a.id, attr, opt
-#     HAVING prod_num > 0
-#     ORDER BY a.id
-#     ''', substr)
-#
-#     filters = make_2d_filters(filters_query)
-#
-#     return render(request, 'subcategory_products/subcategory_products.html', {'all_categories': all_categories,
-#                                                                               'title': "searched for '" + substr + "'",
-#                                                                               'products': products,
-#                                                                               'filters': json.dumps(filters,
-#                                                                                                     cls=DjangoJSONEncoder)
-#                                                                               })
 
 
 def product_info(request, product_id):
@@ -272,7 +225,7 @@ def product_info(request, product_id):
 
     images = product.images.all()
 
-    return render(request, 'product_info/product_info.html',
+    return render(request, 'product_info.html',
                   {'all_categories': all_categories, 'product': product, 'attributes': attributes, 'images': images})
 
 
