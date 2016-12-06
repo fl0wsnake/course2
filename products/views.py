@@ -14,7 +14,8 @@ def sort_query(query, request):
         str = request.GET['sort']
     else:
         str = 'rating'
-    return query + (' ORDER BY p.price' if str == 'price' else ' ORDER BY p.price DESC' if str == 'priceDesc' else ' ORDER BY p.rating DESC')
+    return query + (
+    ' ORDER BY p.price' if str == 'price' else ' ORDER BY p.price DESC' if str == 'priceDesc' else ' ORDER BY p.rating DESC')
 
 
 def get_filtered_products(query, filters, raw_data):
@@ -116,13 +117,10 @@ def float_filter(query, attrs, data):
     return query
 
 
-def subcategory_products(request, subcategory_name):
-    subcategory = get_object_or_404(Subcategory, name=subcategory_name)
-    all_categories = Category.objects.all()
-
+def parseUrl(request):
     attrs = {}
     for attr in request.GET:
-        if attr == 'sort':
+        if (attr == 'sort') or (attr == 'search'):
             continue
         attr_type = get_object_or_404(Attribute, name=attr).type.name
         if attr_type not in attrs:
@@ -131,13 +129,36 @@ def subcategory_products(request, subcategory_name):
             attrs[attr_type][attr] = []
         for opt in request.GET.getlist(attr):
             attrs[attr_type][attr].append(opt)
+    return attrs
+
+
+def make_2d_filters(filters_query):
+    filters = []
+    prev_attr = '0'
+    for opt in filters_query:
+        if opt.attr != prev_attr:
+            filters.append({'attr': opt.attr, 'opts': [{'opt': opt.opt, 'prod_num': opt.prod_num}]})
+            prev_attr = opt.attr
+        else:
+            filters[-1]['opts'].append({'opt': opt.opt, 'prod_num': opt.prod_num})
+    return filters
+
+
+def subcategory_products(request, subcategory_name):
+    subcategory = get_object_or_404(Subcategory, name=subcategory_name)
+    all_categories = Category.objects.all()
+
+    attrs = parseUrl(request)
+    data = [subcategory.id]
 
     query = '''SELECT p.id, p.name, p.price, p.rating
     FROM products_product p
     JOIN products_subcategory sc ON p.subcategory_id = sc.id
     WHERE (sc.id = %s)'''
 
-    data = [subcategory.id]
+    if 'search' in request.GET and len(request.GET['search']):
+        data.append('%' + request.GET['search'] + '%')
+        query += " AND (p.name LIKE %s)"
 
     if 'optionvalue' in attrs:
         query = option_filter(query, attrs['optionvalue'], data)
@@ -156,29 +177,66 @@ def subcategory_products(request, subcategory_name):
     JOIN attributes_optionvalue ov ON p.id = ov.product_id
     JOIN attributes_option o ON ov.option_id = o.id
     JOIN attributes_attribute a ON o.attribute_id = a.id
-    WHERE p.subcategory_id = %(cat)s
+    WHERE p.subcategory_id = %s
     GROUP BY a.id, attr, opt
     HAVING prod_num > 0
     ORDER BY a.id
-    ''', {'cat': subcategory.id})
+    ''', [subcategory.id])
 
-    filters = []
-    prev_attr = '0'
-    i = -1
-    for opt in filters_query:
-        if opt.attr != prev_attr:
-            filters.append({'attr': opt.attr, 'opts': [{'opt': opt.opt, 'prod_num': opt.prod_num}]})
-            prev_attr = opt.attr
-            i += 1
-        else:
-            filters[i]['opts'].append({'opt': opt.opt, 'prod_num': opt.prod_num})
+    filters = make_2d_filters(filters_query)
 
     return render(request, 'subcategory_products/subcategory_products.html', {'all_categories': all_categories,
-                                                                              'subcategory': subcategory,
+                                                                              'title': subcategory.name,
                                                                               'products': products,
                                                                               'filters': json.dumps(filters,
                                                                                                     cls=DjangoJSONEncoder)
                                                                               })
+
+
+# def search_products(request):
+#     all_categories = Category.objects.all()
+#     substr = request.
+#
+#     attrs = parseUrl(request)
+#
+#     query = '''SELECT p.id, p.name, p.price, p.rating
+#     FROM products_product p
+#     JOIN products_subcategory sc ON p.subcategory_id = sc.id
+#     WHERE (p.name LIKE %s)'''
+#
+#     data = ['%' + substr + '%']
+#
+#     if 'optionvalue' in attrs:
+#         query = option_filter(query, attrs['optionvalue'], data)
+#     if 'intvalue' in attrs:
+#         query = int_filter(query, attrs['intvalue'], data)
+#     if 'floatvalue' in attrs:
+#         query = float_filter(query, attrs['floatvalue'], data)
+#
+#     query = sort_query(query, request)
+#
+#     products = Product.objects.raw(query, data)
+#
+#     filters_query = Attribute.objects.raw('''
+#     SELECT DISTINCT a.id, a.name AS attr, o.name AS opt, COUNT(ov.product_id) AS prod_num
+#     FROM products_product p
+#     JOIN attributes_optionvalue ov ON p.id = ov.product_id
+#     JOIN attributes_option o ON ov.option_id = o.id
+#     JOIN attributes_attribute a ON o.attribute_id = a.id
+#     WHERE p.name LIKE %s
+#     GROUP BY a.id, attr, opt
+#     HAVING prod_num > 0
+#     ORDER BY a.id
+#     ''', substr)
+#
+#     filters = make_2d_filters(filters_query)
+#
+#     return render(request, 'subcategory_products/subcategory_products.html', {'all_categories': all_categories,
+#                                                                               'title': "searched for '" + substr + "'",
+#                                                                               'products': products,
+#                                                                               'filters': json.dumps(filters,
+#                                                                                                     cls=DjangoJSONEncoder)
+#                                                                               })
 
 
 def product_info(request, product_id):

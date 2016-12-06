@@ -16,10 +16,8 @@
     <nav class="navbar navbar-inverse .navbar-fixed-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'index' %}">haven't actually come up with a name yet</a>
-            <form class="navbar-form navbar-left" method="get" action="#">
-                <input class="form-control" type="text" name="query" placeholder="Search">
-                <input class="btn btn-default" type="submit" value="Go">
-            </form>
+            {% block search %}
+            {% endblock %}
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="#">Link</a></li>
                 <li><a href="#">Link</a></li>

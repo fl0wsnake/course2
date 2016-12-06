@@ -1,33 +1,22 @@
 {% extends "base_template.html" %}
+
+{% block search %}
+    {% include 'embeddable/search.html' %}
+{% endblock %}
+
 {% block content %}
-    <div class="content-header page-header">
-        <h1>{{ subcategory.name.title }}</h1>{% include 'embeddable/sort_dropdown.html' %}</div>
-    <div class="cont">
+    <div class="content-header page-header" v-cloak>
+        <h1>{{ title | title }}</h1>{% include 'embeddable/sort_dropdown.html' %}</div>
+    <div class="cont" v-cloak>
         {% for product in products %}
-            <div class="product frame">
-                <a href="{% url 'product_info' product.id %}">
-                    <div class="img-container">
-                        <img src="{{ MEDIA_URL }}{{ product.title_image.img }}"
-                             alt="there should have been an image...">
-                    </div>
-                    <div class="product-name">{{ product.name }}</div>
-                </a>
-                <div class="product-bar1">
-                    <div class="product-price">{{ product.price | floatformat }} usd</div>
-                    <div class="product-rating">{{ product.rating }}<span class="glyphicon glyphicon-star"></span></div>
-                    {#                    <div class="product-comments-num">69 comments</div>#}
-                </div>
-                <div class="product-bar2">
-                    <a href=""><span class="glyphicon glyphicon-heart"></span></a>
-                </div>
-            </div>
+            {% include 'embeddable/product_plate.html' %}
         {% endfor %}
     </div>
 {% endblock %}
 
 {% block aside_content %}
     {% verbatim %}
-    <ul class="list-group" v-for="attr in attrs">
+    <ul class="list-group" v-for="attr in attrs" v-cloak>
         <h4>
             {{ attr.attr }}
         </h4>
@@ -42,6 +31,7 @@
 {% block js %}
     <script>
         (function () {
+            Vue.filter('title', w=>w.replace(/\w/, c=>c.toUpperCase()))
             let vue = new Vue({
                 el: "#body",
                 data: {
@@ -50,7 +40,8 @@
                         {val: 'price', text: 'From cheap to expensive'},
                         {val: 'pricedesc', text: 'From expensive to cheap'},
                         {val: 'rating', text: 'By rating'}
-                    ]
+                    ],
+                    searchText: ''
                 },
                 computed: {
                     url: {
@@ -68,7 +59,7 @@
                         },
                         set: function (arr) {
                             attr = arr[0].toLowerCase()
-                            opt = arr[1].toLowerCase()
+                            opt = arr[1] ? arr[1].toLowerCase() : ''
                             let s = ""
                             if (!this.url[attr])
                                 this.url[attr] = {}
@@ -87,12 +78,20 @@
                             return 'sort' in this.url ? Object.keys(this.url['sort'])[0] : 'rating'
                         },
                         set: function (sortVal) {
-                            for (let k in this.url) delete this.url[k];
+                            delete this.url['sort']
                             this.url = ['sort', sortVal]
                         }
                     },
-                    curSortText: function(){
-                        return this.buttText.find(x=>x.val == this.curSort).text
+                    curSortText: function () {
+                        return this.buttText.find(x => x.val == this.curSort).text
+                    },
+                    curSearch: {
+                        get: function () {
+                            return 'search' in this.url ? Object.keys(this.url['search'])[0] : ''
+                        }, set: function (s) {
+                            delete this.url['search']
+                            this.url = ['search', s]
+                        }
                     }
                 },
                 created: function () {
@@ -100,18 +99,9 @@
                         o.selected = !!this.url[a.attr.toLowerCase()] && !!this.url[a.attr.toLowerCase()][o.opt.toLowerCase()]
                         o.attr = a
                     }))
-                    {#                    if ('sort' in this.url) {#}
-                    {#                        let s = Object.keys(this.url['sort'])[0]#}
-                    {#                        $('#sort-dropdown').text(s == 'price' ? '')#}
-                    {#                    }#}
-                    {#                    else#}
-                    {#                        $('#sort-dropdown').text('By rating')#}
+                    this.searchText = this.curSearch
                 },
-{#                mounted: function () {#}
-{#                    console.log(this.curSort)#}
-{#                }#}
             })
-
         })()
     </script>
 {% endblock %}

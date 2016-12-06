@@ -1,7 +1,7 @@
 {% extends "base_template.html" %}
 {% block title %}{{ product.name }}{% endblock %}
 {% block content %}
-    <div class="content-header page-header"><h1>Top sales</h1></div>
+    <div class="content-header page-header"><h1>{{ product.name }}</h1></div>
     <div class="product-info-bar frame">
         <div class="img-container frame">
             <img src="{{ MEDIA_URL }}{{ product.title_image.img }}" alt="there should have been an image...">
