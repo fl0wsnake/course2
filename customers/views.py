@@ -1,9 +1,11 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import View
 from .forms import RegisterForm
 from django.contrib.auth import login
 from .models import *
 from django.http import HttpResponse
+from orders.models import *
+from products.models import Product
 
 
 class RegisterFormView(View):
@@ -47,15 +49,71 @@ def rate_product(request, product_id, rate):
 
     ProductRate.objects.update_or_create(customer=request.user, product_id=product_id, defaults={'rate': rate_float})
     return HttpResponse(1)
-    # record = ProductRate.objects.filter(customer=request.user, product_id=product_id)
-    # if record.exists():
-    #     record.rate = rate_float
-    #     record.save()
-    #     return HttpResponse(1)
-    # ProductRate.objects.create(customer=request.user, product_id=product_id, rate=rate_float)
-    # return HttpResponse(1)
 
 
 def profile(request):
     if not request.user.is_authenticated:
         return redirect('index')
+
+    try:
+        products = request.user.baskets.get(customer=request.user).purchases.select_related('product')
+    except Purchase.DoesNotExist:
+        products = Purchase.objects.none
+
+    return render(request, 'profile.html', {'products': products})
+
+
+def orders(request):
+    if not request.user.is_authenticated:
+        return redirect('index')
+    return render(request, 'orders.html')
+
+
+def favorites(request):
+    if not request.user.is_authenticated:
+        return redirect('index')
+    return render(request, 'favorites.html')
+
+
+def purchase_product(request, product_id):
+    if not request.user.is_authenticated:
+        return redirect('index')
+
+    product = get_object_or_404(Product, id=product_id)
+
+    try:
+        basket = request.user.baskets.get(order__isnull=True)
+    except Basket.DoesNotExist:
+        basket = request.user.baskets.create(customer=request.user)
+
+    basket.purchases.create(product_id=product_id)
+
+    return redirect('profile')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

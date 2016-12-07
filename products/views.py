@@ -127,9 +127,3 @@ def product_info(request, product_id):
 
     return render(request, 'product_info.html',
                   {'all_categories': all_categories, 'product': product, 'attributes': attributes, 'images': images})
-
-
-# @require_http_methods(['POST'])
-def purchase_product(request, product_id):
-    product = get_object_or_404(Product, id=product_id)
-    return redirect('/product/' + product_id)

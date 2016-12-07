@@ -1,18 +1,18 @@
 {% extends "base_template.html" %}
 
 {% block search %}
-    {% include 'embeddable/search.html' %}
+    {% include 'search.html' %}
 {% endblock %}
 
 {% block aside %}
-    {% include 'embeddable/aside_with_filters.html' %}
+    {% include 'aside_with_filters.html' %}
 {% endblock %}
 
 {% block content %}
     <div class="content-header page-header" v-cloak>
-        <h1>{{ title | title }}</h1>{% include 'embeddable/sort_dropdown.html' %}</div>
+        <h1>{{ title | title }}</h1>{% include 'sort_dropdown.html' %}</div>
     <div class="cont" v-cloak>
-        {% include 'embeddable/products.html' %}
+        {% include 'products.html' %}
     </div>
 {% endblock %}
 

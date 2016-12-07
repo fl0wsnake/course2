@@ -46,3 +46,6 @@ class Product(models.Model):
             return self.productrate_set.aggregate(Avg('rate'))['rate__avg']
         else:
             return 0
+
+    def liked(self, customer):
+        return self.productlike_set.filter(customer=customer).exists()
