@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Avg
 
 
 class Category(models.Model):
@@ -36,7 +37,12 @@ class Product(models.Model):
     price = models.FloatField(default=0)
     name = models.CharField(default=None, max_length=100)
     description = models.TextField(null=True, default=None)
-    rating = models.FloatField(default=0)
 
     def __str__(self):
         return self.name.title()
+
+    def rating(self):
+        if self.productrate_set.exists():
+            return self.productrate_set.aggregate(Avg('rate'))['rate__avg']
+        else:
+            return 0

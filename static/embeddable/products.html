@@ -1,0 +1,22 @@
+{% for product in products %}
+    <div class="product frame">
+        <a href="{% url 'product_info' product.id %}">
+            <div class="img-container">
+                <img src="{{ MEDIA_URL }}{{ product.title_image.img }}"
+                     alt="there should have been an image...">
+            </div>
+            <div class="product-name">{{ product.name }}</div>
+        </a>
+        <div class="product-bar1">
+            <div class="product-price">{{ product.price | floatformat }} usd</div>
+            <div class="product-rating">{{ product.rating }}<span class="glyphicon glyphicon-star"></span></div>
+        </div>
+        <div class="product-bar2">
+            {% if user.is_authenticated %}
+                <div class="like" onclick="like(event, {{ product.id }})">
+                    <span class="glyphicon {% if product.liked %}glyphicon-heart{% else %}glyphicon-heart-empty{% endif %}"></span>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endfor %}

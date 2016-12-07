@@ -12,16 +12,14 @@
     <div class="content-header page-header" v-cloak>
         <h1>{{ title | title }}</h1>{% include 'embeddable/sort_dropdown.html' %}</div>
     <div class="cont" v-cloak>
-        {% for product in products %}
-            {% include 'embeddable/product_plate.html' %}
-        {% endfor %}
+        {% include 'embeddable/products.html' %}
     </div>
 {% endblock %}
 
 {% block js %}
     <script>
         (function () {
-            Vue.filter('title', w=>w.replace(/\w/, c=>c.toUpperCase()))
+            Vue.filter('title', w => w.replace(/\w/, c => c.toUpperCase()))
             let vue = new Vue({
                 el: "#body",
                 data: {

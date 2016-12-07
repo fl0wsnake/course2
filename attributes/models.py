@@ -21,8 +21,6 @@ class Attribute(models.Model):
     type = models.ForeignKey(AttributeType, on_delete=models.PROTECT)
     name = models.CharField(max_length=50)
 
-    # suffix = models.ManyToManyField(Suffix, related_name="attribute")
-
     def __str__(self):
         return self.name
 

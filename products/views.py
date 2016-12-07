@@ -3,144 +3,30 @@ from .models import *
 from attributes.models import *
 import json
 from django.core.serializers.json import DjangoJSONEncoder
-
-
-# from django.views.decorators.http import require_http_methods
-
-
-def sort_query(query, request):
-    if 'sort' in request.GET:
-        str = request.GET['sort']
-    else:
-        str = 'rating'
-    return query + (
-        ' ORDER BY p.price' if str == 'price' else ' ORDER BY p.price DESC' if str == 'priceDesc' else ' ORDER BY p.rating DESC')
-
-
-def get_filtered_products(query, filters, raw_data):
-    options = {}
-    for attr in filters:
-        attr_type = get_object_or_404(Attribute, name=attr).type
-        if attr_type.type == "num":
-
-            gap = filters[attr].split('-')
-            raw_data.append(attr)
-            raw_data.append(gap[0])
-            raw_data.append(gap[1])
-            query += ' (LOWER(a.name) = %s AND ' + (
-                '(iv' if attr_type.name == 'intvalue' else 'fv') + '.value BETWEEN %s AND %s)) AND'
-        elif attr_type.type == "option":
-            options[attr] = filters.getlist(attr)
-
-    query += ' ('
-    for attr in options:
-        for opt in options[attr]:
-            raw_data.append(attr)
-            raw_data.append(opt)
-            query += '(LOWER(a.name) = %s AND LOWER(o.name) = %s) OR '
-
-    if query[-6:] == ' AND (':
-        query = query[:-6]
-    else:
-        query = query[:-4] + ')'
-
-    query += ' GROUP BY p.id, p.name, p.price, p.rating HAVING count >= %s' % len(options)
-
-    return query
+from .methods import *
 
 
 def index(request):
     all_categories = Category.objects.all()
+    data = []
+    if request.user.is_authenticated:
+        data.append(request.user.id)
+        query = '''SELECT p.*, if(pl.id IS NOT NULL, 1, 0) AS liked, if(pr.rating IS NULL, 0, pr.rating) AS rating
+        FROM products_product p
+        LEFT JOIN (SELECT id, product_id FROM customers_productlike WHERE customer_id = %s) AS pl
+        ON p.id = pl.product_id
+        LEFT JOIN (SELECT product_id, AVG(rate) as rating FROM customers_productrate GROUP BY product_id) AS pr
+        ON p.id=pr.product_id
+        '''
+    else:
+        query = '''SELECT p.*, if(pr.rating IS NULL, 0, pr.rating) AS rating
+        FROM products_product p
+        LEFT JOIN (SELECT product_id, AVG(rate) AS rating FROM customers_productrate GROUP BY product_id) AS pr
+        ON p.id=pr.product_id
+        '''
     top_products = Product.objects.raw(
-        sort_query('SELECT * FROM products_product p', request) + ' LIMIT 16')
+        sort_query(query, request) + ' LIMIT 16', data)
     return render(request, 'index.html', {'all_categories': all_categories, 'products': top_products})
-
-
-def option_filter(query, attrs, data):
-    query = '''SELECT p.id, p.name, p.price, p.rating, COUNT(*) AS count
-    FROM (%s) as p
-    LEFT JOIN attributes_optionvalue ov ON p.id = ov.product_id
-    LEFT JOIN attributes_option o ON ov.option_id = o.id
-    LEFT JOIN attributes_attribute a ON o.attribute_id = a.id
-    WHERE
-    ''' % query
-    for attr in attrs:
-        for opt in attrs[attr]:
-            data.append(attr)
-            data.append(opt)
-            query += '(LOWER(a.name) = %s AND LOWER(o.name) = %s) OR '
-
-    query = query[:-4]
-    query += ' GROUP BY p.id, p.name, p.price, p.rating HAVING count = %s' % len(attrs)
-
-    return query
-
-
-def int_filter(query, attrs, data):
-    query = '''SELECT p.id, p.name, p.price, p.rating, COUNT(*) AS count
-    FROM (%s) as p
-    LEFT JOIN attributes_intvalue iv ON p.id = iv.product_id
-    LEFT JOIN attributes_attribute a ON iv.attribute_id = a.id
-    WHERE
-    ''' % query
-    for attr in attrs:
-        gap = attrs[attr][0].split('-')
-        data.append(attr)
-        data.append(gap[0])
-        data.append(gap[1])
-        query += ' (LOWER(a.name) = %s AND (iv.value BETWEEN %s AND %s)) AND'
-
-    query = query[:-4]
-    query += ' GROUP BY p.id, p.name, p.price, p.rating HAVING count = %s' % len(attrs)
-
-    return query
-
-
-def float_filter(query, attrs, data):
-    query = '''SELECT p.id, p.name, p.price, p.rating, COUNT(*) AS count
-    FROM (%s) as p
-    LEFT JOIN attributes_floatvalue fv ON p.id = fv.product_id
-    LEFT JOIN attributes_attribute a ON fv.attribute_id = a.id
-    WHERE
-    ''' % query
-    for attr in attrs:
-        gap = attrs[attr][0].split('-')
-        data.append(attr)
-        data.append(gap[0])
-        data.append(gap[1])
-        query += ' (LOWER(a.name) = %s AND (fv.value BETWEEN %s AND %s)) AND'
-
-    query = query[:-4]
-    query += ' GROUP BY p.id, p.name, p.price, p.rating HAVING count = %s' % len(attrs)
-
-    return query
-
-
-def parseUrl(request):
-    attrs = {}
-    for attr in request.GET:
-        if (attr == 'sort') or (attr == 'search'):
-            continue
-        attr_type = get_object_or_404(Attribute, name=attr).type.name
-        if attr_type not in attrs:
-            attrs[attr_type] = {}
-        if attr not in attrs[attr_type]:
-            attrs[attr_type][attr] = []
-        for opt in request.GET.getlist(attr):
-            attrs[attr_type][attr].append(opt)
-    return attrs
-
-
-def make_2d_filters(filters_query):
-    filters = []
-    prev_attr = '0'
-    for opt in filters_query:
-        if opt.attr != prev_attr:
-            filters.append({'attr': opt.attr, 'opts': [{'opt': opt.opt, 'prod_num': opt.prod_num}]})
-            prev_attr = opt.attr
-        else:
-            filters[-1]['opts'].append({'opt': opt.opt, 'prod_num': opt.prod_num})
-    return filters
 
 
 def subcategory_products(request, subcategory_name):
@@ -148,12 +34,26 @@ def subcategory_products(request, subcategory_name):
     all_categories = Category.objects.all()
 
     attrs = parseUrl(request)
-    data = [subcategory.id]
+    data = []
 
-    query = '''SELECT p.id, p.name, p.price, p.rating
-    FROM products_product p
-    JOIN products_subcategory sc ON p.subcategory_id = sc.id
-    WHERE (sc.id = %s)'''
+    if request.user.is_authenticated:
+        data.append(request.user.id)
+        data.append(subcategory.id)
+        query = '''SELECT p.*, if(pl.id IS NOT NULL, 1, 0) AS liked, if(pr.rating IS NULL, 0, pr.rating) AS rating
+        FROM products_product p LEFT JOIN
+        (SELECT id, product_id FROM customers_productlike WHERE customer_id = %s) AS pl ON p.id = pl.product_id
+        JOIN products_subcategory sc ON p.subcategory_id = sc.id
+        LEFT JOIN (SELECT product_id, AVG(rate) as rating FROM customers_productrate GROUP BY product_id) AS pr
+        ON p.id=pr.product_id
+        WHERE (sc.id = %s)'''
+    else:
+        data.append(subcategory.id)
+        query = '''SELECT p.id, p.name, p.price, if(pr.rating IS NULL, 0, pr.rating) AS rating
+        FROM products_product p
+        JOIN products_subcategory sc ON p.subcategory_id = sc.id
+        LEFT JOIN (SELECT product_id, AVG(rate) as rating FROM customers_productrate GROUP BY product_id) AS pr
+        ON p.id=pr.product_id
+        WHERE (sc.id = %s)'''
 
     if 'search' in request.GET and len(request.GET['search']):
         data.append('%' + request.GET['search'] + '%')
@@ -185,11 +85,11 @@ def subcategory_products(request, subcategory_name):
     filters = make_2d_filters(filters_query)
 
     return render(request, 'subcategory_products.html', {'all_categories': all_categories,
-                                                                              'title': subcategory.name,
-                                                                              'products': products,
-                                                                              'filters': json.dumps(filters,
-                                                                                                    cls=DjangoJSONEncoder)
-                                                                              })
+                                                         'title': subcategory.name,
+                                                         'products': products,
+                                                         'filters': json.dumps(filters,
+                                                                               cls=DjangoJSONEncoder)
+                                                         })
 
 
 def product_info(request, product_id):

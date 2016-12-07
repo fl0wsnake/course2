@@ -12,7 +12,7 @@ html, body {
 }
 
 div {
-float: left;
+    float: left;
 }
 
 .container-fluid {
@@ -136,6 +136,25 @@ img {
     margin: 0 8px 8px 0;
 }
 
+#text-next-to-image {
+    margin-left: 408px;
+    float: none;
+}
+
+#text-next-to-image > * {
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+#text-next-to-image input {
+    display: block;
+    float: left;
+}
+
+#rate-bar > * {
+    margin-left: 8px;
+}
+
 .attr-val {
     width: 100%;
 }
@@ -147,5 +166,18 @@ img {
 
 .option {
     cursor: pointer;
+}
+
+.like {
+    cursor: pointer;
+}
+
+input[type=range] {
+    width: 200px;
+}
+
+#textInput {
+    width: 40px;
+    text-align: center;
 }
 

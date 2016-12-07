@@ -17,16 +17,12 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
-from users.views import *
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
-                  url(r'^register/$', RegisterFormView.as_view(), name='register'),
-                  # url(r'^login/$', LoginFormView.as_view(), name='login'),
-                  # url(r'^logout/$', user_logout, name='logout'),
                   url(r'^login/$', auth_views.login, name='login'),
                   url(r'^logout/$', auth_views.logout, {'next_page': '/'}, name='logout'),
-                  # url(r'^accounts/', include('registration.backends.simple.urls')),
                   url(r'', include('products.urls')),
+                  url(r'', include('customers.urls')),
                   url(r'^admin/', admin.site.urls),
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
