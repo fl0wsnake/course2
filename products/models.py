@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import Avg
+# from customers.models import ProductLike
 
 
 class Category(models.Model):
@@ -47,5 +48,6 @@ class Product(models.Model):
         else:
             return 0
 
-    def liked(self, customer):
-        return self.productlike_set.filter(customer=customer).exists()
+    # def liked(self, customer):
+    #     return self.productlike_set.filter(customer=customer).exists()
+        # return ProductLike.filter(product=self, customer=customer)

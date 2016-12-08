@@ -56,7 +56,11 @@ def profile(request):
         return redirect('index')
 
     try:
-        products = request.user.baskets.get(customer=request.user).purchases.select_related('product')
+        # products = request.user.baskets.get(customer=request.user).purchases.select_related('product')
+        products = Product.objects.filter(
+            pk__in=Purchase.objects.filter(
+                basket=request.user.baskets.exclude(
+                    pk__in=Order.objects.all().values('id'))).values('product_id')).select_related('productlike').values('')
     except Purchase.DoesNotExist:
         products = Purchase.objects.none
 

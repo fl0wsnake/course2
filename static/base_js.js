@@ -1,5 +1,5 @@
 function like(ev, id) {
-    $.get("like/" + id, function (d) {
+    $.get("/like/" + id, function (d) {
         if (+d)
             $(ev.target).removeClass('glyphicon-heart-empty').addClass('glyphicon-heart')
         else
