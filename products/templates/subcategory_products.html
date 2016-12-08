@@ -5,7 +5,10 @@
 {% endblock %}
 
 {% block aside %}
-    {% include 'aside_with_filters.html' %}
+    <div class="aside">
+        {% include 'categories.html' %}
+        {% include 'filters.html' %}
+    </div>
 {% endblock %}
 
 {% block content %}

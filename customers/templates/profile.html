@@ -5,8 +5,15 @@
 {% endblock %}
 
 {% block aside %}
-    {% include 'aside_profile.html' %}
-    <h2>total sum: {{ sum | floatformat }} usd</h2>
+    <div class="aside">
+        {% include 'categories.html' %}
+        <div class="list-group aside-content">
+            <a class="list-group-item" href="{% url 'profile' %}">Backet</a>
+            <a class="list-group-item" href="{% url 'orders' %}">Ordered</a>
+            <a class="list-group-item" href="{% url 'favorites' %}">Favorites</a>
+        </div>
+        <div><h3>total sum: {{ sum | floatformat }} usd</h3></div>
+    </div>
 {% endblock %}
 
 {% block content %}

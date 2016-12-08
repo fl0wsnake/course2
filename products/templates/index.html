@@ -1,6 +1,8 @@
 {% extends "base_template.html" %}
 {% block aside %}
-    {% include 'aside.html' %}
+    <div class="aside">
+        {% include 'categories.html' %}
+    </div>
 {% endblock %}
 {% block content %}
     <div class="content-header page-header"><h1>Top sales</h1></div>

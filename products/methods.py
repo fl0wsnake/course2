@@ -8,7 +8,7 @@ def sort_query(query, request):
     else:
         str = 'rating'
     return query + (
-        ' ORDER BY p.price' if str == 'price' else ' ORDER BY p.price DESC' if str == 'priceDesc' else ' ORDER BY pr.rating DESC')
+        ' ORDER BY p.price' if str == 'price' else ' ORDER BY p.price DESC' if str == 'priceDesc' else ' ORDER BY rating DESC')
 
 
 def option_filter(query, attrs, data):
