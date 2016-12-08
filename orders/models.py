@@ -19,6 +19,9 @@ class Purchase(models.Model):
     basket = models.ForeignKey(Basket, related_name='purchases')
     amount = models.IntegerField(default=1)
 
+    def __str__(self):
+        return self.basket.customer.username + "'s " + str(self.product)
+
 
 class Order(models.Model):
     status = models.ForeignKey(OrderStatus, on_delete=models.PROTECT)

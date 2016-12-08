@@ -1,8 +1,8 @@
 <div class="aside">
     {% include 'categories.html' %}
-    <div class="aside-content">
-        <a href="{% url 'profile' %}"></a>
-        <a href="{% url 'orders' %}"></a>
-        <a href="{% url 'favorites' %}"></a>
+    <div class="list-group aside-content">
+        <a class="list-group-item" href="{% url 'profile' %}">Backet</a>
+        <a class="list-group-item" href="{% url 'orders' %}">Ordered</a>
+        <a class="list-group-item" href="{% url 'favorites' %}">Favorites</a>
     </div>
 </div>

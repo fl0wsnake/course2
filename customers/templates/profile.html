@@ -6,8 +6,9 @@
 
 {% block aside %}
     {% include 'aside_profile.html' %}
+    <h2>total sum: {{ sum | floatformat }} usd</h2>
 {% endblock %}
 
 {% block content %}
-    {% include 'products.html' %}
+    {% include 'purchases.html' %}
 {% endblock %}

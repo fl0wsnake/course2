@@ -5,7 +5,9 @@ from django.contrib.auth import login
 from .models import *
 from django.http import HttpResponse
 from orders.models import *
-from products.models import Product
+from products.models import Product, Category
+from django.db.models import Sum
+from django.db import connection
 
 
 class RegisterFormView(View):
@@ -55,16 +57,21 @@ def profile(request):
     if not request.user.is_authenticated:
         return redirect('index')
 
+    all_categories = Category.objects.all()
+
     try:
-        # products = request.user.baskets.get(customer=request.user).purchases.select_related('product')
-        products = Product.objects.filter(
+        purchases = Product.objects.filter(
             pk__in=Purchase.objects.filter(
                 basket=request.user.baskets.exclude(
-                    pk__in=Order.objects.all().values('id'))).values('product_id')).select_related('productlike').values('')
+                    pk__in=Order.objects.all(). \
+                        values('id'))). \
+                values('product_id'))
     except Purchase.DoesNotExist:
-        products = Purchase.objects.none
+        purchases = Product.objects.none
 
-    return render(request, 'profile.html', {'products': products})
+    total = purchases.aggregate(sum=Sum('price'))['sum']
+
+    return render(request, 'profile.html', {'all_categories': all_categories, 'purchases': purchases, 'sum': total})
 
 
 def orders(request):
@@ -80,10 +87,8 @@ def favorites(request):
 
 
 def purchase_product(request, product_id):
-    if not request.user.is_authenticated:
+    if not request.user.is_authenticated or not Product.objects.filter(id=product_id).exists():
         return redirect('index')
-
-    product = get_object_or_404(Product, id=product_id)
 
     try:
         basket = request.user.baskets.get(order__isnull=True)
@@ -95,29 +100,19 @@ def purchase_product(request, product_id):
     return redirect('profile')
 
 
+def cancel_purchase(request, product_id):
+    if not request.user.is_authenticated:
+        return redirect('index')
 
+    cursor = connection.cursor()
 
+    cursor.execute('''
+    DELETE FROM orders_purchase
+    WHERE product_id = %s AND basket_id =
+    (SELECT id FROM orders_basket WHERE customer_id = %s AND id NOT IN
+    (SELECT basket_id FROM orders_order))
+    ''', [product_id, request.user.id])
 
+    connection.commit()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return redirect('profile')
