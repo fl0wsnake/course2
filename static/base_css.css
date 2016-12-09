@@ -183,10 +183,10 @@ input[type=range] {
 
 .purchase {
     height: 100px;
-    width:100%;
+    width: 100%;
 }
 
-.purchase img{
+.purchase img {
     float: left;
     margin-right: 20px;
 }
@@ -194,7 +194,14 @@ input[type=range] {
 .purchase div {
     margin-right: 20px;
     margin-top: 25px;
+}
 
+.form-field > * {
+    width: 100%;
+}
+
+.form-field > label {
+    right: 120px;
 }
 
 

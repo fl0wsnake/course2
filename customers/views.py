@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import View
-from .forms import RegisterForm
+from .forms import *
 from django.contrib.auth import login
 from .models import *
 from django.http import HttpResponse
@@ -53,37 +53,50 @@ def rate_product(request, product_id, rate):
     return HttpResponse(1)
 
 
-def profile(request):
-    if not request.user.is_authenticated:
-        return redirect('index')
+class ProfileView(View):
+    form_class = OrderForm
+    template_name = 'profile.html'
 
-    all_categories = Category.objects.all()
+    def get(self, request):
+        if not request.user.is_authenticated:
+            return redirect('index')
 
-    try:
-        purchases = Product.objects.filter(
-            pk__in=Purchase.objects.filter(
-                basket=request.user.baskets.exclude(
-                    pk__in=Order.objects.all(). \
-                        values('id'))). \
-                values('product_id'))
-    except Purchase.DoesNotExist:
-        purchases = Product.objects.none
+        form = self.form_class(None)
 
-    total = purchases.aggregate(sum=Sum('price'))['sum']
+        all_categories = Category.objects.all()
 
-    return render(request, 'profile.html', {'all_categories': all_categories, 'purchases': purchases, 'sum': total})
+        try:
+            purchases = Product.objects.filter(
+                pk__in=Purchase.objects.filter(
+                    basket=request.user.baskets.exclude(
+                        pk__in=Order.objects.all(). \
+                            values('basket_id'))). \
+                    values('product_id'))
+        except Purchase.DoesNotExist:
+            purchases = Product.objects.none
 
+        total = purchases.aggregate(sum=Sum('price'))['sum']
 
-def orders(request):
-    if not request.user.is_authenticated:
-        return redirect('index')
-    return render(request, 'orders.html')
+        return render(request, 'profile.html',
+                      {'all_categories': all_categories, 'purchases': purchases, 'sum': total, 'form': form})
 
+    def post(self, request):
+        if not request.user.is_authenticated:
+            return redirect('index')
 
-def favorites(request):
-    if not request.user.is_authenticated:
-        return redirect('index')
-    return render(request, 'favorites.html')
+        basket = request.user.baskets.exclude(pk__in=Order.objects.all().values('basket_id'))
+
+        if not Purchase.objects.filter(
+                basket=basket).exists():
+            return redirect('profile')
+
+        order = self.form_class(request.POST).save(commit=False)
+
+        order.basket = basket
+
+        order.save()
+
+        return redirect('orders')
 
 
 def purchase_product(request, product_id):
@@ -116,3 +129,23 @@ def cancel_purchase(request, product_id):
     connection.commit()
 
     return redirect('profile')
+
+
+def orders(request):
+    if not request.user.is_authenticated:
+        return redirect('index')
+
+    all_categories = Category.objects.all()
+
+    orders = Order.objects.filter(basket__customer=request.user)
+
+    return render(request, 'orders.html', {'all_categories': all_categories, 'orders': orders})
+
+
+def favorites(request):
+    if not request.user.is_authenticated:
+        return redirect('index')
+
+    all_categories = Category.objects.all()
+
+    return render(request, 'favorites.html')

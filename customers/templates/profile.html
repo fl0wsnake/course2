@@ -7,12 +7,18 @@
 {% block aside %}
     <div class="aside">
         {% include 'categories.html' %}
-        <div class="list-group aside-content">
-            <a class="list-group-item" href="{% url 'profile' %}">Backet</a>
-            <a class="list-group-item" href="{% url 'orders' %}">Ordered</a>
-            <a class="list-group-item" href="{% url 'favorites' %}">Favorites</a>
-        </div>
+        {% include 'profile_nav.html' %}
         <div><h3>total sum: {{ sum | floatformat }} usd</h3></div>
+        <form class="form-horizontal" role="form" action="" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.basket.id }}
+            {% include 'form_template.html' %}
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <button type="submit" class="btn btn-success">Submit</button>
+                </div>
+            </div>
+        </form>
     </div>
 {% endblock %}
 
