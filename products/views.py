@@ -15,7 +15,7 @@ def index(request):
         FROM products_product p
         LEFT JOIN (SELECT id, product_id FROM customers_productlike WHERE customer_id = %s) AS pl
         ON p.id = pl.product_id
-        LEFT JOIN (SELECT product_id, AVG(rate) as rating FROM customers_productrate GROUP BY product_id) AS pr
+        LEFT JOIN (SELECT product_id, AVG(rate) AS rating FROM customers_productrate GROUP BY product_id) AS pr
         ON p.id=pr.product_id
         '''
     else:
@@ -24,9 +24,32 @@ def index(request):
         LEFT JOIN (SELECT product_id, AVG(rate) AS rating FROM customers_productrate GROUP BY product_id) AS pr
         ON p.id=pr.product_id
         '''
+
     top_products = Product.objects.raw(
         sort_query(query, request) + ' LIMIT 16', data)
-    return render(request, 'index.html', {'all_categories': all_categories, 'products': top_products})
+
+    q2 = ''
+    for p in request.COOKIES:
+        if p != 'csrftoken' and p != 'sessionid':
+            q2 += '(SELECT id, %s AS hits FROM attributes_option WHERE id = %s) UNION ' % (request.COOKIES[p], p)
+
+    if q2[-7:] == ' UNION ':
+        q2 = q2[:-7]
+
+    recommended = Product.objects.raw('''
+        SELECT p.id, p.price, p.name, p.description, p.subcategory_id, if(AVG(pr.rate) IS NULL, 0, AVG(pr.rate))*p.hits AS relevance FROM
+        (SELECT p.*, SUM(h.hits) AS hits FROM products_product p
+        JOIN attributes_optionvalue ov ON p.id = ov.product_id
+        JOIN (%s) AS h ON h.id = ov.option_id
+        GROUP BY p.id, p.price, p.name, p.description, p.subcategory_id) AS p
+        LEFT JOIN
+        customers_productrate pr ON p.id=pr.product_id
+        GROUP BY p.id, p.price, p.name, p.description, p.subcategory_id
+        ORDER BY relevance DESC
+    ''' % q2)
+
+    return render(request, 'index.html',
+                  {'all_categories': all_categories, 'products': top_products, 'recommended': recommended})
 
 
 def subcategory_products(request, subcategory_name):
@@ -43,7 +66,7 @@ def subcategory_products(request, subcategory_name):
         FROM products_product p LEFT JOIN
         (SELECT id, product_id FROM customers_productlike WHERE customer_id = %s) AS pl ON p.id = pl.product_id
         JOIN products_subcategory sc ON p.subcategory_id = sc.id
-        LEFT JOIN (SELECT product_id, AVG(rate) as rating FROM customers_productrate GROUP BY product_id) AS pr
+        LEFT JOIN (SELECT product_id, AVG(rate) AS rating FROM customers_productrate GROUP BY product_id) AS pr
         ON p.id=pr.product_id
         WHERE (sc.id = %s)'''
     else:
@@ -51,7 +74,7 @@ def subcategory_products(request, subcategory_name):
         query = '''SELECT p.id, p.name, p.price, if(pr.rating IS NULL, 0, pr.rating) AS rating
         FROM products_product p
         JOIN products_subcategory sc ON p.subcategory_id = sc.id
-        LEFT JOIN (SELECT product_id, AVG(rate) as rating FROM customers_productrate GROUP BY product_id) AS pr
+        LEFT JOIN (SELECT product_id, AVG(rate) AS rating FROM customers_productrate GROUP BY product_id) AS pr
         ON p.id=pr.product_id
         WHERE (sc.id = %s)'''
 
@@ -125,5 +148,17 @@ def product_info(request, product_id):
 
     images = product.images.all()
 
-    return render(request, 'product_info.html',
-                  {'all_categories': all_categories, 'product': product, 'attributes': attributes, 'images': images})
+    response = render(request, 'product_info.html',
+                      {'all_categories': all_categories, 'product': product, 'attributes': attributes,
+                       'images': images})
+
+    opts = Option.objects.filter(optionvalue__product=product).values('id')
+    list_opts = [x['id'] for x in opts]
+
+    for o in list_opts:
+        if str(o) in request.COOKIES.keys():
+            response.set_cookie(str(o), str(int(request.COOKIES[str(o)]) + 1))
+        else:
+            response.set_cookie(str(o), 1)
+
+    return response
