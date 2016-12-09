@@ -204,4 +204,16 @@ input[type=range] {
     right: 120px;
 }
 
+.panel.order {
+    width: 100%;
+}
+
+.panel.order > * {
+    float: none;
+}
+
+#categories-button {
+    margin-bottom: 20px;
+}
+
 

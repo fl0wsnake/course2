@@ -12,7 +12,17 @@
 {% endblock %}
 
 {% block content %}
-    {% for order in orders %}
-        {% include 'purchases.html' with purchases=order.basket.products %}
-    {% endfor %}
+    <div class="content-header page-header"><h1>Orders</h1></div>
+    <div class="cont">
+        {% for order in orders %}
+            <div class="order panel panel-{% if order.status_id == 2 %}danger{% else %}success{% endif %}">
+                <div class="panel-heading">Status: {{ order.status }} | Credentials: {{ order.customername }} |
+                    Address: {{ order.address }} | Phone number: {{ order.phone_number }}</div>
+                {% include 'order_purchases.html' with purchases=order.get_purchases %}
+                <div class="panel-footer">Total sum: {{ order.get_sum }}<a href="{% url 'cancel_order' order.id %}"
+                                                                           class="btn btn-default">Cancel order</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
 {% endblock %}

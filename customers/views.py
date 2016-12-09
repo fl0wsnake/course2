@@ -68,12 +68,10 @@ class ProfileView(View):
         try:
             purchases = Product.objects.filter(
                 pk__in=Purchase.objects.filter(
-                    basket=request.user.baskets.exclude(
-                        pk__in=Order.objects.all(). \
-                            values('basket_id'))). \
-                    values('product_id'))
-        except Purchase.DoesNotExist:
-            purchases = Product.objects.none
+                    basket=request.user.baskets.get(order__isnull=True)
+                ).values('product_id'))
+        except:
+            purchases = Product.objects.none()
 
         total = purchases.aggregate(sum=Sum('price'))['sum']
 
@@ -84,17 +82,16 @@ class ProfileView(View):
         if not request.user.is_authenticated:
             return redirect('index')
 
-        basket = request.user.baskets.exclude(pk__in=Order.objects.all().values('basket_id'))
+        basket = request.user.baskets.get(order__isnull=True)
 
         if not Purchase.objects.filter(
                 basket=basket).exists():
             return redirect('profile')
 
-        order = self.form_class(request.POST).save(commit=False)
+        order = self.form_class(request.POST).save()
 
-        order.basket = basket
-
-        order.save()
+        basket.order = order
+        basket.save()
 
         return redirect('orders')
 
@@ -122,8 +119,7 @@ def cancel_purchase(request, product_id):
     cursor.execute('''
     DELETE FROM orders_purchase
     WHERE product_id = %s AND basket_id =
-    (SELECT id FROM orders_basket WHERE customer_id = %s AND id NOT IN
-    (SELECT basket_id FROM orders_order))
+    (SELECT id FROM orders_basket WHERE customer_id = %s AND order_id IS NULL)
     ''', [product_id, request.user.id])
 
     connection.commit()
@@ -142,10 +138,22 @@ def orders(request):
     return render(request, 'orders.html', {'all_categories': all_categories, 'orders': orders})
 
 
+def cancel_order(request, order_id):
+    if not request.user.is_authenticated or not Order.objects.filter(id=order_id).exists():
+        return redirect('index')
+
+    Basket.objects.get(order_id=order_id).delete()
+    Order.objects.get(id=order_id).delete()
+
+    return redirect('orders')
+
+
 def favorites(request):
     if not request.user.is_authenticated:
         return redirect('index')
 
     all_categories = Category.objects.all()
 
-    return render(request, 'favorites.html')
+    favorites = Product.objects.filter(productlike__customer=request.user)
+
+    return render(request, 'favorites.html', {'all_categories': all_categories, 'products': favorites})

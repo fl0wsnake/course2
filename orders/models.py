@@ -1,6 +1,7 @@
 from django.db import models
 from products.models import Product
 from django.contrib.auth.models import User
+from django.db.models import Sum
 
 
 class OrderStatus(models.Model):
@@ -10,8 +11,22 @@ class OrderStatus(models.Model):
         return str(self.status)
 
 
+class Order(models.Model):
+    status = models.ForeignKey(OrderStatus, on_delete=models.PROTECT, default=2)
+    customername = models.CharField(max_length=50, null=True, default=None)
+    address = models.CharField(max_length=50, null=True, default=None)
+    phone_number = models.CharField(max_length=50, null=True, default=None)
+
+    def get_purchases(self):
+        return Product.objects.filter(purchase__basket__order=self)
+
+    def get_sum(self):
+        return self.get_purchases().aggregate(Sum('price'))['price__sum']
+
+
 class Basket(models.Model):
     customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='baskets')
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, null=True, default=None, related_name='basket')
 
     def __str__(self):
         return str(self.customer.username) + "'s"
@@ -27,14 +42,3 @@ class Purchase(models.Model):
 
     def __str__(self):
         return self.basket.customer.username + "'s " + str(self.product)
-
-
-class Order(models.Model):
-    status = models.ForeignKey(OrderStatus, on_delete=models.PROTECT, default=2)
-    basket = models.OneToOneField(Basket, on_delete=models.CASCADE, null=True, default=None)
-    customername = models.CharField(max_length=50, null=True, default=None)
-    address = models.CharField(max_length=50, null=True, default=None)
-    phone_number = models.CharField(max_length=50, null=True, default=None)
-
-    def get_purchases(self):
-        return self.basket.purchases

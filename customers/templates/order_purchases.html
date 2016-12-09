@@ -1,0 +1,12 @@
+<ul class="list-group">
+    {% for purchase in purchases %}
+        <div class="list-group-item purchase">
+            <a href="{% url 'product_info' purchase.id %}">
+                <img src="{{ MEDIA_URL }}{{ purchase.title_image.img }}"
+                     alt="there should have been an image...">
+                <div>{{ purchase.name }}</div>
+                <div>{{ purchase.price }} usd</div>
+            </a>
+        </div>
+    {% endfor %}
+</ul>

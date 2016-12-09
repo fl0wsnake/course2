@@ -10,4 +10,5 @@ urlpatterns = [
     url(r'^profile/favorites/$', views.favorites, name='favorites'),
     url(r'^purchase/(?P<product_id>[0-9]+)$', views.purchase_product, name='purchase_product'),
     url(r'^cancelpurchase/(?P<product_id>[0-9]+)$', views.cancel_purchase, name='cancel_purchase'),
+    url(r'^cancelorder/(?P<order_id>[0-9]+)$', views.cancel_order, name='cancel_order'),
 ]
