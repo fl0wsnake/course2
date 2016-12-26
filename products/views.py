@@ -36,14 +36,31 @@ def index(request):
     if q2[-7:] == ' UNION ':
         q2 = q2[:-7]
 
-    recommended = Product.objects.raw('''
-        SELECT p.id, p.price, p.name, p.description, p.subcategory_id, if(AVG(pr.rate) IS NULL, 0, AVG(pr.rate))*p.hits AS relevance FROM
-        (SELECT p.*, SUM(h.hits) AS hits FROM products_product p
+    if q2 == '':
+        recommended = Product.objects.none()
+    elif request.user.is_authenticated:
+        recommended = Product.objects.raw('''
+        SELECT p.id, p.price, p.name, p.description, p.subcategory_id, liked, if(AVG(pr.rate) IS NULL, 0, AVG(pr.rate))*p.hits AS relevance FROM
+        (SELECT p.*, if(pl.id IS NOT NULL, 1, 0) AS liked, SUM(h.hits) AS hits FROM products_product p
+        LEFT JOIN (SELECT id, product_id FROM customers_productlike WHERE customer_id = %s) AS pl
+        ON p.id = pl.product_id
         JOIN attributes_optionvalue ov ON p.id = ov.product_id
-        JOIN (%s) AS h ON h.id = ov.option_id
+        JOIN ({0}) AS h ON h.id = ov.option_id
         GROUP BY p.id, p.price, p.name, p.description, p.subcategory_id) AS p
         LEFT JOIN
         customers_productrate pr ON p.id=pr.product_id
+        GROUP BY p.id, p.price, p.name, p.description, p.subcategory_id
+        ORDER BY relevance DESC
+    '''.format(q2), [request.user.id])
+    else:
+        recommended = Product.objects.raw('''
+        SELECT p.id, p.price, p.name, p.description, p.subcategory_id, if(AVG(pr.rate) IS NULL, 0, AVG(pr.rate))*p.hits AS relevance FROM
+        (SELECT p.*, SUM(h.hits) AS hits FROM products_product AS p
+        JOIN attributes_optionvalue AS ov ON p.id = ov.product_id
+        JOIN (%s) AS h ON h.id = ov.option_id
+        GROUP BY p.id, p.price, p.name, p.description, p.subcategory_id) AS p
+        LEFT JOIN
+        customers_productrate AS pr ON p.id=pr.product_id
         GROUP BY p.id, p.price, p.name, p.description, p.subcategory_id
         ORDER BY relevance DESC
     ''' % q2)

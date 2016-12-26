@@ -8,8 +8,10 @@
     <div class="content-header page-header"><h1>Top sales</h1></div>
     <div class="cont">
         {% include 'products.html' %}
-        <div class="content-header page-header"><h1>Recommended</h1></div>
-        {% include 'products.html' with products=recommended %}
+        {% if recommended %}
+            <div class="content-header page-header"><h1>Recommended</h1></div>
+            {% include 'products.html' with products=recommended %}
+        {% endif %}
     </div>
 {% endblock %}
 

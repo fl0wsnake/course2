@@ -8,6 +8,7 @@ from orders.models import *
 from products.models import Product, Category
 from django.db.models import Sum
 from django.db import connection
+from django.db.models.expressions import Value
 
 
 class RegisterFormView(View):
@@ -154,6 +155,6 @@ def favorites(request):
 
     all_categories = Category.objects.all()
 
-    favorites = Product.objects.filter(productlike__customer=request.user)
+    favorites = Product.objects.filter(productlike__customer=request.user).annotate(liked=Value(1, output_field=models.IntegerField()))
 
     return render(request, 'favorites.html', {'all_categories': all_categories, 'products': favorites})
