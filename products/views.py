@@ -4,6 +4,10 @@ from attributes.models import *
 import json
 from django.core.serializers.json import DjangoJSONEncoder
 from .methods import *
+from django.views.generic import View
+import re
+from django.http import Http404
+from orders.models import *
 
 
 def index(request):
@@ -99,12 +103,12 @@ def subcategory_products(request, subcategory_name):
         data.append('%' + request.GET['search'] + '%')
         query += " AND (p.name LIKE %s)"
 
-    if 'optionvalue' in attrs:
-        query = option_filter(query, attrs['optionvalue'], data)
-    if 'intvalue' in attrs:
-        query = int_filter(query, attrs['intvalue'], data)
-    if 'floatvalue' in attrs:
-        query = float_filter(query, attrs['floatvalue'], data)
+    if 'option' in attrs:
+        query = option_filter(query, attrs['option'], data)
+    if 'int' in attrs:
+        query = int_filter(query, attrs['int'], data)
+    if 'float' in attrs:
+        query = float_filter(query, attrs['float'], data)
 
     query = sort_query(query, request)
 
@@ -143,18 +147,18 @@ def product_info(request, product_id):
     JOIN attributes_attribute a ON o.attribute_id = a.id
     WHERE ov.product_id = %(id)s
     UNION
-    SELECT iv.id AS id, a.name AS name, CONCAT(iv.value, s.name) AS val
+    SELECT iv.id AS id, a.name AS name, CONCAT(iv.value, IF(s.name, s.name, '')) AS val
     FROM attributes_intvalue iv
     JOIN attributes_attribute a ON iv.attribute_id = a.id
-    JOIN attributes_attributesuffix atsuf ON atsuf.attribute_id = a.id
-    JOIN attributes_suffix s ON atsuf.suffix_id = s.id
+    LEFT JOIN attributes_attributesuffix atsuf ON atsuf.attribute_id = a.id
+    LEFT JOIN attributes_suffix s ON atsuf.suffix_id = s.id
     WHERE iv.product_id = %(id)s
     UNION
-    SELECT fv.id AS id, a.name AS name, CONCAT(fv.value, s.name) AS val
+    SELECT fv.id AS id, a.name AS name, CONCAT(fv.value, IF(s.name, s.name, '')) AS val
     FROM attributes_floatvalue fv
     JOIN attributes_attribute a ON fv.attribute_id = a.id
-    JOIN attributes_attributesuffix atsuf ON atsuf.attribute_id = a.id
-    JOIN attributes_suffix s ON atsuf.suffix_id = s.id
+    LEFT JOIN attributes_attributesuffix atsuf ON atsuf.attribute_id = a.id
+    LEFT JOIN attributes_suffix s ON atsuf.suffix_id = s.id
     WHERE fv.product_id = %(id)s
     UNION
     SELECT vcv.id AS id, a.name AS name, vcv.value AS val
@@ -179,3 +183,69 @@ def product_info(request, product_id):
             response.set_cookie(str(o), 1)
 
     return response
+
+
+class AddProductView(View):
+    template_name = 'add_product.html'
+
+    def get(self, request):
+        if not request.user.is_superuser:
+            raise Http404()
+        return render(request, self.template_name)
+
+    def post(self, request):
+        if not request.user.is_superuser:
+            raise Http404()
+        subcategory = get_object_or_404(Subcategory, name=request.POST.get('subcategory').lower())
+        product = Product.objects.create(
+            name=request.POST.get('name'), price=request.POST.get('price'), description=request.POST.get('description'),
+            title_image=request.POST.get('image')
+        )
+        product.subcategory = subcategory
+        product.save()
+        attributes = request.POST.get('attributes')
+        for attribute in attributes.split('\n'):
+            parts = list(map(lambda x: x.strip().lower(), attribute.split('-')))
+            if re.match('int', parts[1], re.IGNORECASE) and re.match('^[0-9]+$', parts[2]):
+                xtype = AttributeType.objects.get(name='int')
+                attr = Attribute.objects.get_or_create(type=xtype, name=parts[0])[0]
+                IntValue.objects.create(product=product, attribute=attr, value=parts[2])
+                # if len(parts) > 3:
+                #     suffix = Suffix.objects.get_or_create(name=parts[3])[0]
+                #     AttributeSuffix.objects.create()
+            elif re.match('fl|fr', parts[1], re.IGNORECASE) and re.match('^[0-9]+(?:\.[0-9]+)?$', parts[2]):
+                xtype = AttributeType.objects.get(name='float')
+                attr = Attribute.objects.get_or_create(type=xtype, name=parts[0])[0]
+                FloatValue.objects.create(product=product, attribute=attr, value=parts[2])
+            elif re.match('op', parts[1], re.IGNORECASE):
+                xtype = AttributeType.objects.get(name='option')
+                attr = Attribute.objects.get_or_create(type=xtype, name=parts[0])[0]
+                opt = Option.objects.get_or_create(attribute=attr, name=parts[2])[0]
+                OptionValue.objects.create(product=product, option=opt)
+            elif re.match('str|ch', parts[1], re.IGNORECASE):
+                xtype = AttributeType.objects.get(name='varchar')
+                attr = Attribute.objects.get_or_create(type=xtype, name=parts[0])[0]
+                VarcharValue.objects.create(product=product, attribute=attr, value=parts[2])
+            else:
+                raise Http404('incorrect attribute type')
+        return render(request, self.template_name)
+
+
+def statistics(request):
+    if not request.user.is_superuser:
+        raise Http404()
+    products = Product.objects.raw('''
+    SELECT pr.id, pr.name, COUNT(b.order_id) AS count FROM products_product AS pr
+    LEFT JOIN orders_purchase AS pur ON pr.id = pur.product_id
+    LEFT JOIN orders_basket AS b ON pur.basket_id = b.id
+    LEFT JOIN orders_order AS o ON b.order_id = o.id
+    WHERE o.timestamp BETWEEN CURDATE() - INTERVAL 30 DAY AND CURDATE() + INTERVAL 1 DAY
+    OR o.timestamp IS NULL
+    GROUP BY pr.id, pr.name
+    ''')
+
+    orders = Order.objects.filter(status__status='not delivered')
+
+    products2json = list(map(lambda x: {'name': x.name, 'count': x.count}, products))
+
+    return render(request, 'statistics.html', {'products': json.dumps(products2json, cls=DjangoJSONEncoder)})

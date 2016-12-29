@@ -1,0 +1,44 @@
+{% extends "base_template.html" %}
+{% block title %}Statistics{% endblock %}
+{% block aside %}
+    <div class="aside">
+        {% include 'categories.html' %}
+    </div>
+{% endblock %}
+{% block content %}
+    <div class="statistics-row frame">
+        <h2>Products sold in last 30 days</h2>
+        <canvas id="myChart" height="500"></canvas>
+    </div>
+{% endblock %}
+{% block script %}
+    <script>
+        let data = {% autoescape off %}{{ products }}{% endautoescape %};
+        let ctx = document.getElementById("myChart").getContext('2d')
+        let myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.reduce((acc, p) => {
+                    acc.push(p.name)
+                    return acc
+                }, []),
+                datasets: [{
+                    label: 'sold',
+                    data: data.reduce((acc, p) => {
+                        acc.push(p.count)
+                        return acc
+                    }, [])
+                }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }]
+                }
+            }
+        });
+    </script>
+{% endblock %}

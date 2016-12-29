@@ -10,6 +10,7 @@
     <script src="{% static "node_modules/vue/dist/vue.min.js" %}"></script>
     <link rel="stylesheet" href="{% static "base_css.css" %}">
     <script src="{% static "node_modules/vue/dist/vue.min.js" %}"></script>
+    <script src="{% static "node_modules/chart.js/dist/Chart.min.js" %}"></script>
 </head>
 <body>
 <div id="body">
@@ -20,6 +21,10 @@
             {% endblock %}
             <ul class="nav navbar-nav navbar-right">
                 {% if user.is_authenticated %}
+                    {% if user.is_superuser %}
+                        <li><a href="{% url 'add_product' %}">Add product</a></li>
+                        <li><a href="{% url 'statistics' %}">Statistics</a></li>
+                    {% endif %}
                     <li><a href="{% url 'profile' %}">{{ user.get_username }}</a></li>
                     <li><a href="{% url 'logout' %}">Logout</a></li>
                 {% else %}
@@ -33,8 +38,8 @@
     <div class="content">
         {% block content %} {% endblock %}
     </div>
-    {% block js %}{% endblock %}
 </div>
+{% block script %}{% endblock %}
 <script src="{% static 'base_js.js' %}"></script>
 </body>
 </html>

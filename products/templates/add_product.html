@@ -1,0 +1,23 @@
+{% extends "base_template.html" %}
+{% block title %}New product{% endblock %}
+{% block aside %}
+    <div class="aside">
+        {% include 'categories.html' %}
+    </div>
+{% endblock %}
+{% block content %}
+    <form action="" method="post">
+        {% csrf_token %}
+        <label for="name">Name: </label><input type="text" id="name" name="name">
+        <br>
+        <label for="description">Description: </label><input type="text" id="description" name="description">
+        <br>
+        <label for="price">Price: </label><input type="text" id="price" name="price">
+        <br>
+        <label for="subcategory">Subcategory: </label><input type="text" id="subcategory" name="subcategory">
+        <br>
+        <label for="attributes">Attributes: </label><textarea id="attributes" name="attributes"></textarea>
+        <p>like [attribute name] - [attribute type(int, float, option, varchar)] - [attribute value]</p>
+        <input type="submit">
+    </form>
+{% endblock %}

@@ -13,9 +13,10 @@ class OrderStatus(models.Model):
 
 class Order(models.Model):
     status = models.ForeignKey(OrderStatus, on_delete=models.PROTECT, default=2)
-    customername = models.CharField(max_length=50, null=True, default=None)
+    customer_name = models.CharField(max_length=50, null=True, default=None)
     address = models.CharField(max_length=50, null=True, default=None)
     phone_number = models.CharField(max_length=50, null=True, default=None)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     def get_purchases(self):
         return Product.objects.filter(purchase__basket__order=self)
@@ -36,8 +37,8 @@ class Purchase(models.Model):
     class Meta:
         unique_together = ('product', 'basket')
 
-    product = models.ForeignKey(Product)
-    basket = models.ForeignKey(Basket, related_name='purchases')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    basket = models.ForeignKey(Basket, related_name='purchases', on_delete=models.CASCADE)
     amount = models.IntegerField(default=1)
 
     def __str__(self):
