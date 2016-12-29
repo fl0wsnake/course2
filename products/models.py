@@ -7,7 +7,7 @@ class Category(models.Model):
     name = models.CharField(max_length=100)
 
     def get_subcategories(self):
-        return self.subcategory_set.all()
+        return Subcategory.objects.filter(category=self)
 
     def __str__(self):
         return self.name

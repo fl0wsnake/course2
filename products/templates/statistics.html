@@ -8,24 +8,54 @@
 {% block content %}
     <div class="statistics-row frame">
         <h2>Products sold in last 30 days</h2>
-        <canvas id="myChart" height="500"></canvas>
+        <canvas id="stat1" height="500" width="500"></canvas>
+    </div>
+    <div class="statistics-row frame">
+        <h2>Amount of orders made by each customer</h2>
+        <canvas id="stat2" height="500" width="500"></canvas>
     </div>
 {% endblock %}
 {% block script %}
     <script>
-        let data = {% autoescape off %}{{ products }}{% endautoescape %};
-        let ctx = document.getElementById("myChart").getContext('2d')
-        let myChart = new Chart(ctx, {
+        let products = {% autoescape off %}{{ products }}{% endautoescape %};
+        let chart1 = new Chart(document.getElementById("stat1").getContext('2d'), {
             type: 'bar',
             data: {
-                labels: data.reduce((acc, p) => {
+                labels: products.reduce((acc, p) => {
                     acc.push(p.name)
                     return acc
                 }, []),
                 datasets: [{
                     label: 'sold',
-                    data: data.reduce((acc, p) => {
+                    data: products.reduce((acc, p) => {
                         acc.push(p.count)
+                        return acc
+                    }, [])
+                }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }]
+                }
+            }
+        });
+
+        let users = {% autoescape off %}{{ users }}{% endautoescape %};
+        let chart2 = new Chart(document.getElementById("stat2").getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: users.reduce((acc, x) => {
+                    acc.push(x.username + '(id=' + x.id + ')')
+                    return acc
+                }, []),
+                datasets: [{
+                    label: 'number of orders',
+                    data: users.reduce((acc, x) => {
+                        acc.push(x.count)
                         return acc
                     }, [])
                 }]

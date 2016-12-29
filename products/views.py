@@ -8,6 +8,7 @@ from django.views.generic import View
 import re
 from django.http import Http404
 from orders.models import *
+from django.contrib.auth.models import User
 
 
 def index(request):
@@ -147,14 +148,14 @@ def product_info(request, product_id):
     JOIN attributes_attribute a ON o.attribute_id = a.id
     WHERE ov.product_id = %(id)s
     UNION
-    SELECT iv.id AS id, a.name AS name, CONCAT(iv.value, IF(s.name, s.name, '')) AS val
+    SELECT iv.id AS id, a.name AS name, CONCAT(iv.value, IF(s.name IS NOT NULL, s.name, '')) AS val
     FROM attributes_intvalue iv
     JOIN attributes_attribute a ON iv.attribute_id = a.id
     LEFT JOIN attributes_attributesuffix atsuf ON atsuf.attribute_id = a.id
     LEFT JOIN attributes_suffix s ON atsuf.suffix_id = s.id
     WHERE iv.product_id = %(id)s
     UNION
-    SELECT fv.id AS id, a.name AS name, CONCAT(fv.value, IF(s.name, s.name, '')) AS val
+    SELECT fv.id AS id, a.name AS name, CONCAT(fv.value, IF(s.name IS NOT NULL, s.name, '')) AS val
     FROM attributes_floatvalue fv
     JOIN attributes_attribute a ON fv.attribute_id = a.id
     LEFT JOIN attributes_attributesuffix atsuf ON atsuf.attribute_id = a.id
@@ -242,10 +243,20 @@ def statistics(request):
     WHERE o.timestamp BETWEEN CURDATE() - INTERVAL 30 DAY AND CURDATE() + INTERVAL 1 DAY
     OR o.timestamp IS NULL
     GROUP BY pr.id, pr.name
+    ORDER BY count DESC
     ''')
 
     orders = Order.objects.filter(status__status='not delivered')
 
-    products2json = list(map(lambda x: {'name': x.name, 'count': x.count}, products))
+    users = User.objects.raw('''
+    SELECT u.username, u.id, COUNT(*) as count FROM auth_user AS u
+    JOIN orders_basket AS b ON u.id = b.customer_id
+    WHERE b.order_id IS NOT NULL
+    GROUP BY u.username
+    ORDER BY count DESC
+    ''')
 
-    return render(request, 'statistics.html', {'products': json.dumps(products2json, cls=DjangoJSONEncoder)})
+    products2json = list(map(lambda x: {'name': x.name, 'count': x.count}, products))
+    users2json = list(map(lambda x: {'username': x.username, 'count': x.count, 'id': x.id}, users))
+
+    return render(request, 'statistics.html', {'products': json.dumps(products2json, cls=DjangoJSONEncoder), 'users': users2json})
