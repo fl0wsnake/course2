@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Avg
-# from customers.models import ProductLike
+from django.db.models import Sum
+from django.db import connection
 
 
 class Category(models.Model):
@@ -19,6 +20,18 @@ class Subcategory(models.Model):
 
     def __str__(self):
         return self.name
+
+    # def get_sum(self):
+    #     with connection.cursor() as cursor:
+    #         cursor.execute('''
+    #             SELECT IF(sum IS NOT NULL, sum, 0) FROM (SELECT SUM(pr.price * pur.amount) AS sum FROM products_subcategory AS sc
+    #              JOIN products_product AS pr ON sc.id = pr.subcategory_id
+    #              JOIN orders_purchase AS pur ON pr.id = pur.product_id
+    #              JOIN orders_basket AS b ON pur.basket_id = b.id
+    #              WHERE b.order_id IS NOT NULL
+    #              AND sc.id = %s) AS t
+    #         ''' % self.id)
+    #         return cursor.fetchone()[0]
 
 
 class Image(models.Model):
@@ -48,6 +61,6 @@ class Product(models.Model):
         else:
             return 0
 
-    # def liked(self, customer):
-    #     return self.productlike_set.filter(customer=customer).exists()
-        # return ProductLike.filter(product=self, customer=customer)
+            # def liked(self, customer):
+            #     return self.productlike_set.filter(customer=customer).exists()
+            # return ProductLike.filter(product=self, customer=customer)

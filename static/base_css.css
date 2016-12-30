@@ -15,6 +15,10 @@ div {
     float: left;
 }
 
+a {
+    cursor: pointer !important;
+}
+
 .container-fluid {
     float: none;
 }
@@ -218,7 +222,9 @@ input[type=range] {
 
 .statistics-row {
     height: 500px;
+    width: 100%;
     margin-bottom: 20px;
+    position: relative;
 }
 
 

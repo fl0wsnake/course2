@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Categories report</title>
+</head>
+<body>
+<h2>Report for last 30 days</h2>
+{% for sc in subcategories %}
+    <p>{{ sc.name }}: {{ sc.sum }}</p>
+{% endfor %}
+<h3>Total: {{ sum }}</h3>
+</body>
+</html>

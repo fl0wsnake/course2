@@ -8,4 +8,6 @@ urlpatterns = [
         name='subcategory_products'),
     url(r'^add_product$', views.AddProductView.as_view(), name='add_product'),
     url(r'^statistics$', views.statistics, name='statistics'),
+    url(r'^statistics/(?P<subcategory_name>[a-zA-Z]+)$', views.subcategory_manufacturer_stat, name='subcategory_manufacturer_stat'),
+    url(r'^categories_report$', views.categories_report, name='categories_report')
 ]

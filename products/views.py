@@ -9,6 +9,8 @@ import re
 from django.http import Http404
 from orders.models import *
 from django.contrib.auth.models import User
+from django.http import HttpResponse
+from django.db import connection
 
 
 def index(request):
@@ -192,7 +194,8 @@ class AddProductView(View):
     def get(self, request):
         if not request.user.is_superuser:
             raise Http404()
-        return render(request, self.template_name)
+        all_categories = Category.objects.all()
+        return render(request, self.template_name, {'all_categories': all_categories})
 
     def post(self, request):
         if not request.user.is_superuser:
@@ -211,9 +214,6 @@ class AddProductView(View):
                 xtype = AttributeType.objects.get(name='int')
                 attr = Attribute.objects.get_or_create(type=xtype, name=parts[0])[0]
                 IntValue.objects.create(product=product, attribute=attr, value=parts[2])
-                # if len(parts) > 3:
-                #     suffix = Suffix.objects.get_or_create(name=parts[3])[0]
-                #     AttributeSuffix.objects.create()
             elif re.match('fl|fr', parts[1], re.IGNORECASE) and re.match('^[0-9]+(?:\.[0-9]+)?$', parts[2]):
                 xtype = AttributeType.objects.get(name='float')
                 attr = Attribute.objects.get_or_create(type=xtype, name=parts[0])[0]
@@ -229,34 +229,75 @@ class AddProductView(View):
                 VarcharValue.objects.create(product=product, attribute=attr, value=parts[2])
             else:
                 raise Http404('incorrect attribute type')
-        return render(request, self.template_name)
+            all_categories = Category.objects.all()
+        return render(request, self.template_name, {'all_categories': all_categories})
 
 
 def statistics(request):
     if not request.user.is_superuser:
         raise Http404()
-    products = Product.objects.raw('''
-    SELECT pr.id, pr.name, COUNT(b.order_id) AS count FROM products_product AS pr
-    LEFT JOIN orders_purchase AS pur ON pr.id = pur.product_id
-    LEFT JOIN orders_basket AS b ON pur.basket_id = b.id
-    LEFT JOIN orders_order AS o ON b.order_id = o.id
-    WHERE o.timestamp BETWEEN CURDATE() - INTERVAL 30 DAY AND CURDATE() + INTERVAL 1 DAY
-    OR o.timestamp IS NULL
-    GROUP BY pr.id, pr.name
-    ORDER BY count DESC
+
+    cursor = connection.cursor()
+    cursor.execute('''
+        SELECT MONTH(o.timestamp) AS month, YEAR(o.timestamp) AS year, SUM(pr.price * pur.amount) AS sum FROM products_product AS pr
+        JOIN orders_purchase AS pur ON pr.id = pur.product_id
+        JOIN orders_basket AS b ON pur.basket_id = b.id
+        JOIN orders_order AS o ON b.order_id = o.id
+        GROUP BY month
+        ORDER BY sum DESC
+        ''')
+
+    months_stat2json = [{'month': x[0], 'year': x[1], 'sum': x[2]} for x in cursor.fetchall()]
+
+    all_categories = Category.objects.all()
+    return render(request, 'statistics.html',
+                  {'months_stat': json.dumps(months_stat2json, cls=DjangoJSONEncoder),
+                   'all_categories': all_categories})
+
+
+def subcategory_manufacturer_stat(request, subcategory_name):
+    if not request.user.is_superuser:
+        raise Http404()
+
+    manufacturers = Option.objects.raw('''
+        SELECT opt.id, opt.name AS manufacturer, SUM(pr.price*pur.amount) AS sum FROM products_product AS pr
+        JOIN orders_purchase AS pur ON pr.id = pur.product_id
+        JOIN orders_basket AS b ON pur.basket_id = b.id
+        JOIN orders_order AS ord ON b.order_id = ord.id
+        JOIN products_subcategory AS sc ON pr.subcategory_id = sc.id
+        JOIN attributes_optionvalue AS ov ON pr.id = ov.product_id
+        JOIN attributes_option AS opt ON ov.option_id = opt.id
+        JOIN attributes_attribute AS a ON opt.attribute_id = a.id
+        WHERE b.order_id IS NOT NULL
+        AND a.name = 'manufacturer'
+        AND sc.name = '%s'
+        AND ord.timestamp BETWEEN (CURDATE() - INTERVAL 30 DAY) AND (CURDATE() + INTERVAL 1 DAY)
+        GROUP BY opt.id, opt.name
+    ''' % subcategory_name)
+
+    manufacturers2json = [{'manufacturer': x.manufacturer, 'sum': x.sum} for x in manufacturers]
+
+    return HttpResponse(json.dumps(manufacturers2json))
+
+
+def categories_report(request):
+    if not request.user.is_superuser:
+        raise Http404()
+
+    subcategories = Category.objects.raw('''
+    SELECT sc.id, sc.name, SUM(pr.price * pur.amount) AS sum
+    FROM products_subcategory AS sc
+    JOIN products_product AS pr ON sc.id = pr.subcategory_id
+    JOIN orders_purchase AS pur ON pr.id = pur.product_id
+    JOIN orders_basket AS b ON pur.basket_id = b.id
+    JOIN orders_order AS o ON b.order_id = o.id
+    WHERE o.timestamp BETWEEN (CURDATE() - INTERVAL 30 DAY) AND (CURDATE() + INTERVAL 1 DAY)
+    GROUP BY sc.id, sc.name
+    ORDER BY sum DESC
     ''')
 
-    orders = Order.objects.filter(status__status='not delivered')
+    sum = 0
+    for x in subcategories:
+        sum += x.sum
 
-    users = User.objects.raw('''
-    SELECT u.username, u.id, COUNT(*) as count FROM auth_user AS u
-    JOIN orders_basket AS b ON u.id = b.customer_id
-    WHERE b.order_id IS NOT NULL
-    GROUP BY u.username
-    ORDER BY count DESC
-    ''')
-
-    products2json = list(map(lambda x: {'name': x.name, 'count': x.count}, products))
-    users2json = list(map(lambda x: {'username': x.username, 'count': x.count, 'id': x.id}, users))
-
-    return render(request, 'statistics.html', {'products': json.dumps(products2json, cls=DjangoJSONEncoder), 'users': users2json})
+    return render(request, 'categories_report.html', {'subcategories': subcategories, 'sum': sum})
