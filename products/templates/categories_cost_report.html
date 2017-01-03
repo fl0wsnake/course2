@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Categories report</title>
+    <title>report</title>
 </head>
 <body>
-<h2>Report for last 30 days</h2>
+<h2>Cost of products sold in last 30 days</h2>
 {% for sc in subcategories %}
     <p>{{ sc.name }}: {{ sc.sum }}</p>
 {% endfor %}

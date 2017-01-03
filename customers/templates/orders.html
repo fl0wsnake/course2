@@ -16,7 +16,7 @@
     <div class="cont">
         {% for order in orders %}
             <div class="order panel panel-{% if order.status_id == 2 %}danger{% else %}success{% endif %}">
-                <div class="panel-heading">Status: {{ order.status }} | Credentials: {{ order.customername }} |
+                <div class="panel-heading">Status: {{ order.status }} | Credentials: {{ order.customer_name }} |
                     Address: {{ order.address }} | Phone number: {{ order.phone_number }}</div>
                 {% include 'order_purchases.html' with purchases=order.get_purchases %}
                 <div class="panel-footer">Total sum: {{ order.get_sum }}<a href="{% url 'cancel_order' order.id %}"

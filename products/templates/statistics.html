@@ -28,10 +28,12 @@
                 </ul>
             </div>
         </div>
-        <canvas id="stat1" height="400" width="600"></canvas>
+        <div id="stat1">
+            <canvas height="400" width="600"></canvas>
+        </div>
     </div>
     <div class="statistics-row frame">
-        <h2>Proceeds for last 12 months</h2>
+        <h2>Proceeds for each month</h2>
         <canvas id="stat2" height="400" width="600"></canvas>
     </div>
 {% endblock %}
@@ -69,9 +71,14 @@
             }
         })
         function get_subcategory_manufacturer_stat(sc) {
+            $('#stat1').empty()
             $.get("/statistics/" + sc, function (response) {
                 manufacturers = JSON.parse(response)
-                chart1 = new Chart(document.getElementById("stat1").getContext('2d'), {
+                let cnv = document.createElement('canvas')
+                cnv.height = "400"
+                cnv.width = "600"
+                document.getElementById("stat1").append(cnv)
+                chart1 = new Chart(cnv.getContext('2d'), {
                     type: 'pie',
                     data: {
                         labels: manufacturers.reduce((acc, x) => {

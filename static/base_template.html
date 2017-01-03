@@ -22,7 +22,8 @@
             <ul class="nav navbar-nav navbar-right">
                 {% if user.is_authenticated %}
                     {% if user.is_superuser %}
-                        <li><a href="{% url 'categories_report' %}">Report</a></li>
+                        <li><a href="{% url 'categories_cost_report' %}">1st report</a></li>
+                        <li><a href="{% url 'categories_amount_report' %}">2st report</a></li>
                         <li><a href="{% url 'add_product' %}">Add product</a></li>
                         <li><a href="{% url 'statistics' %}">Statistics</a></li>
                     {% endif %}

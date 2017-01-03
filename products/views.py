@@ -280,7 +280,7 @@ def subcategory_manufacturer_stat(request, subcategory_name):
     return HttpResponse(json.dumps(manufacturers2json))
 
 
-def categories_report(request):
+def categories_cost_report(request):
     if not request.user.is_superuser:
         raise Http404()
 
@@ -300,4 +300,27 @@ def categories_report(request):
     for x in subcategories:
         sum += x.sum
 
-    return render(request, 'categories_report.html', {'subcategories': subcategories, 'sum': sum})
+    return render(request, 'categories_cost_report.html', {'subcategories': subcategories, 'sum': sum})
+
+
+def categories_amount_report(request):
+    if not request.user.is_superuser:
+        raise Http404()
+
+    subcategories = Category.objects.raw('''
+        SELECT sc.id, sc.name, COUNT(*) AS count
+        FROM products_subcategory AS sc
+        JOIN products_product AS pr ON sc.id = pr.subcategory_id
+        JOIN orders_purchase AS pur ON pr.id = pur.product_id
+        JOIN orders_basket AS b ON pur.basket_id = b.id
+        JOIN orders_order AS o ON b.order_id = o.id
+        WHERE o.timestamp BETWEEN (CURDATE() - INTERVAL 30 DAY) AND (CURDATE() + INTERVAL 1 DAY)
+        GROUP BY sc.id, sc.name
+        ORDER BY count DESC
+        ''')
+
+    sum = 0
+    for x in subcategories:
+        sum += x.count
+
+    return render(request, 'categories_amount_report.html', {'subcategories': subcategories, 'sum': sum})
